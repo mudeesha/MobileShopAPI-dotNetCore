@@ -1,0 +1,43 @@
+﻿using Microsoft.AspNetCore.Mvc;
+using MobileShopAPI.DTOs;
+using MobileShopAPI.Services.Interfaces;
+
+namespace MobileShopAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class ProductsController : ControllerBase
+    {
+        private readonly IProductService _service;
+
+        public ProductsController(IProductService service)
+        {
+            _service = service;
+        }
+
+        [HttpGet]
+        public async Task<ActionResult<List<ProductDto>>> GetAll() =>
+            Ok(await _service.GetAllAsync());
+
+        [HttpGet("{id}")]
+        public async Task<ActionResult<ProductDto>> GetById(int id)
+        {
+            var product = await _service.GetByIdAsync(id);
+            return product is null ? NotFound() : Ok(product);
+        }
+
+        [HttpPost]
+        public async Task<ActionResult<ProductDto>> Create(ProductCreateDto dto)
+        {
+            var created = await _service.CreateAsync(dto);
+            return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _service.DeleteAsync(id);
+            return result ? NoContent() : NotFound();
+        }
+    }
+}
