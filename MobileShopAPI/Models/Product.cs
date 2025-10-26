@@ -15,10 +15,11 @@ namespace MobileShopAPI.Models
 
         public string SKU { get; set; } = string.Empty;
 
-        public decimal Price { get; set; }
-        public int StockQuantity { get; set; }
-
         public ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
+        public List<ProductInventory> ProductInventories { get; set; } = new();
+
+        public List<ProductImage> ProductImages { get; set; } = new();
+
     }
 
 }

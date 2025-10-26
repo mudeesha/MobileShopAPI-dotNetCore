@@ -6,5 +6,6 @@ namespace MobileShopAPI.Services.Interfaces
     {
         Task<List<AttributeTypeDto>> GetAllAsync();
         Task<AttributeTypeDto> CreateAsync(AttributeTypeCreateDto dto);
+
     }
 }

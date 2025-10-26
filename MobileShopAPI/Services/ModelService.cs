@@ -21,7 +21,8 @@ namespace MobileShopAPI.Services
             {
                 Id = m.Id,
                 Name = m.Name,
-                BrandId = m.BrandId
+                BrandId = m.BrandId,
+                BrandName = m.Brand.Name
             }).ToList();
         }
 
@@ -66,6 +67,45 @@ namespace MobileShopAPI.Services
             await _modelRepository.SaveChangesAsync();
 
             return true;
+        }
+
+        public async Task<List<ModelWithProductsDto>> GetAllModelsWithProductsAsync()
+        {
+            var models = await _modelRepository.GetAllWithProductsAsync();
+
+            return models.Select(m => new ModelWithProductsDto
+            {
+                Id = m.Id,
+                Name = m.Name,
+                BrandId = m.BrandId,
+                Products = m.Products.Select(p => new ProductDto
+                {
+                    Id = p.Id,
+                    SKU = p.SKU,
+                    BrandId = p.BrandId,
+                    BrandName = p.Brand?.Name ?? "",
+                    ModelId = p.ModelId,
+                    ModelName = p.Model?.Name ?? "",
+                    Attributes = p.ProductAttributes.Select(pa => new AttributeValueDto
+                    {
+                        Id = pa.AttributeValueId,
+                        Type = pa.AttributeValue.AttributeType.Name,
+                        Value = pa.AttributeValue.Value
+                    }).ToList(),
+                    StockQuantity = p.ProductInventories.FirstOrDefault()?.StockQuantity ?? 0,
+                    Price = p.ProductInventories.FirstOrDefault()?.Price ?? 0,
+
+                    Images = p.ProductImages.Select(img => new ProductImageDto
+                    {
+                        ProductId = img.ProductId,
+                        ImageUrl = img.ImageUrl,
+                        IsDefault = img.IsDefault,
+                        AttributeValueIds = img.ProductImageAttributeValues.Select(iav => iav.AttributeValueId).ToList()
+                    }).ToList()
+                }).ToList()
+
+
+            }).ToList();
         }
     }
 }

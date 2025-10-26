@@ -16,8 +16,14 @@ namespace MobileShopAPI.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<List<ProductDto>>> GetAll() =>
-            Ok(await _service.GetAllAsync());
+        public async Task<ActionResult<PagedResultDto<ProductDto>>> GetAll(
+             [FromQuery] string? searchTerm,
+             [FromQuery] int pageNumber = 1,
+             [FromQuery] int pageSize = 10)
+        {
+            var result = await _service.GetAllAsync(searchTerm, pageNumber, pageSize);
+            return Ok(result);
+        }
 
         [HttpGet("{id}")]
         public async Task<ActionResult<ProductDto>> GetById(int id)

@@ -9,5 +9,6 @@ namespace MobileShopAPI.Repositories.Interfaces
         Task AddAsync(Model model);
         Task DeleteAsync(Model model);
         Task SaveChangesAsync();
+        Task<List<Model>> GetAllWithProductsAsync();
     }
 }

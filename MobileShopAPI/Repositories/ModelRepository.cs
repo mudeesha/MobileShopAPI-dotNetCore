@@ -29,5 +29,24 @@ namespace MobileShopAPI.Repositories
 
         public async Task SaveChangesAsync() =>
             await _context.SaveChangesAsync();
+
+        public async Task<List<Model>> GetAllWithProductsAsync()
+        {
+            return await _context.Models
+                .Include(m => m.Products)
+                    .ThenInclude(p => p.Brand)
+                .Include(m => m.Products)
+                    .ThenInclude(p => p.ProductAttributes)
+                        .ThenInclude(pa => pa.AttributeValue)
+                            .ThenInclude(av => av.AttributeType)
+                .Include(m => m.Products)
+                    .ThenInclude(p => p.ProductInventories)
+                .Include(m => m.Products)
+                    .ThenInclude(p => p.ProductImages) // ✅ Include product images
+                        .ThenInclude(img => img.ProductImageAttributeValues) // ✅ Include image's attribute values
+                .ToListAsync();
+        }
+
+
     }
 }

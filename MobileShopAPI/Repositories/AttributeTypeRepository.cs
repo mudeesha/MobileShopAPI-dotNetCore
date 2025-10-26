@@ -25,5 +25,12 @@ namespace MobileShopAPI.Repositories
 
         public async Task SaveChangesAsync() =>
             await _context.SaveChangesAsync();
+
+        public async Task<AttributeType?> GetByNameAsync(string name)
+        {
+            return await _context.AttributeTypes
+                .FirstOrDefaultAsync(t => t.Name.ToLower() == name.ToLower());
+        }
+
     }
 }

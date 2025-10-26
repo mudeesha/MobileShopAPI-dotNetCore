@@ -4,8 +4,7 @@
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
-
-        // Optional: Include Brand ID to relate
         public int BrandId { get; set; }
+        public string BrandName { get; set; } = string.Empty;
     }
 }

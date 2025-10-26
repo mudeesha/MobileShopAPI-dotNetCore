@@ -8,5 +8,7 @@ namespace MobileShopAPI.Repositories.Interfaces
         Task<AttributeType?> GetByIdAsync(int id);
         Task AddAsync(AttributeType type);
         Task SaveChangesAsync();
+        Task<AttributeType?> GetByNameAsync(string name);
+
     }
 }

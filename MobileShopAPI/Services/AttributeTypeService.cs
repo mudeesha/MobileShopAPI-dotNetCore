@@ -26,6 +26,12 @@ namespace MobileShopAPI.Services
 
         public async Task<AttributeTypeDto> CreateAsync(AttributeTypeCreateDto dto)
         {
+            var existingType = await _repo.GetByNameAsync(dto.Name);
+            if (existingType != null)
+            {
+                throw new Exception($"Attribute type '{dto.Name}' already exists.");
+            }
+
             var type = new AttributeType
             {
                 Name = dto.Name

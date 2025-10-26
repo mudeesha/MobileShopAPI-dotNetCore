@@ -14,14 +14,33 @@ namespace MobileShopAPI.Repositories
             _context = context;
         }
 
-        public async Task<List<Product>> GetAllAsync() =>
-            await _context.Products
+        public async Task<List<Product>> GetAllAsync()
+        {
+            return await _context.Products
                 .Include(p => p.Brand)
                 .Include(p => p.Model)
                 .Include(p => p.ProductAttributes)
                     .ThenInclude(pa => pa.AttributeValue)
                         .ThenInclude(av => av.AttributeType)
+                .Include(p => p.ProductInventories)
+                .Include(p => p.ProductImages)
+                    .ThenInclude(pi => pi.ProductImageAttributeValues)
                 .ToListAsync();
+        }
+
+        public IQueryable<Product> Query()
+        {
+            return _context.Products
+                .Include(p => p.Brand)
+                .Include(p => p.Model)
+                .Include(p => p.ProductAttributes)
+                    .ThenInclude(pa => pa.AttributeValue)
+                        .ThenInclude(av => av.AttributeType)
+                .Include(p => p.ProductInventories)
+                .Include(p => p.ProductImages)
+                    .ThenInclude(pi => pi.ProductImageAttributeValues)
+                .AsQueryable();
+        }
 
         public async Task<Product?> GetByIdAsync(int id) =>
             await _context.Products
@@ -40,5 +59,18 @@ namespace MobileShopAPI.Repositories
 
         public async Task SaveChangesAsync() =>
             await _context.SaveChangesAsync();
+
+        public async Task<int> GetStockByAttributesAsync(int productId, List<int> attributeValueIds)
+        {
+            var inventory = await _context.ProductInventories
+                .Include(pi => pi.InventoryAttributeValues)
+                .FirstOrDefaultAsync(pi =>
+                    pi.ProductId == productId &&
+                    pi.InventoryAttributeValues.Select(v => v.AttributeValueId).OrderBy(id => id)
+                        .SequenceEqual(attributeValueIds.OrderBy(id => id)));
+
+            return inventory?.StockQuantity ?? 0;
+        }
+
     }
 }

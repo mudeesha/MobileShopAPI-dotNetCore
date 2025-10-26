@@ -7,6 +7,11 @@ namespace MobileShopAPI.Repositories.Interfaces
         Task<List<AttributeValue>> GetAllAsync();
         Task<List<AttributeValue>> GetByIdsAsync(List<int> ids);
         Task AddAsync(AttributeValue value);
+        Task AddRangeAsync(IEnumerable<AttributeValue> values);
         Task SaveChangesAsync();
+        Task<AttributeValue?> GetByTypeAndValueAsync(int attributeTypeId, string value);
+        Task<List<AttributeValue>> GetByAttributeTypeIdAsync(int attributeTypeId);
+
+
     }
 }
