@@ -5,17 +5,12 @@ namespace MobileShopAPI.Models
 {
     public class ProductImage
     {
-        [Key]
         public int Id { get; set; }
-
-        public int ProductId { get; set; }
-
-        [ForeignKey("ProductId")]
-        public Product? Product { get; set; }
-
         public string ImageUrl { get; set; } = null!;
-        public bool IsDefault { get; set; }
-
-        public virtual ICollection<ProductImageAttributeValue>? ProductImageAttributeValues { get; set; }
+        public string? Description { get; set; }
+        public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+    
+        // Navigation - Many-to-many with Products
+        public virtual ICollection<ProductImageAssignment>? ProductImageAssignments { get; set; }
     }
 }

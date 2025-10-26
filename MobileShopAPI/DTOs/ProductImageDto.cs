@@ -3,9 +3,9 @@
     public class ProductImageDto
     {
         public int Id { get; set; }
-        public int ProductId { get; set; }
         public string ImageUrl { get; set; } = null!;
-        public bool IsDefault { get; set; }
-        public List<int> AttributeValueIds { get; set; } = new();
+        public string? Description { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public List<int> ProductIds { get; set; } = new(); // Products using this image
     }
 }

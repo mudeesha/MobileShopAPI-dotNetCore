@@ -17,20 +17,14 @@ namespace MobileShopAPI.Data
         public DbSet<AttributeType> AttributeTypes { get; set; }
         public DbSet<AttributeValue> AttributeValues { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
-        // Remove this line: public DbSet<ProductInventory> ProductInventories { get; set; }
-        public DbSet<InventoryAttributeValue> InventoryAttributeValues { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
-
-
-
+        
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
-
-            // Configure Product (ADD THIS NEW CONFIGURATION)
+            
             modelBuilder.Entity<Product>(entity =>
             {
-                // Configure decimal precision for Price
                 entity.Property(p => p.Price)
                       .HasPrecision(18, 2);
             });
@@ -47,28 +41,24 @@ namespace MobileShopAPI.Data
                 .HasOne(pa => pa.AttributeValue)
                 .WithMany(av => av.ProductAttributes)
                 .HasForeignKey(pa => pa.AttributeValueId);
+            
+            modelBuilder.Entity<ProductImageAssignment>(entity =>
+            {
+                // Composite primary key
+                entity.HasKey(pia => new { pia.ProductId, pia.ProductImageId });
 
-            // UPDATE InventoryAttributeValue configuration
-            modelBuilder.Entity<InventoryAttributeValue>()
-                .HasKey(iav => new { iav.ProductId, iav.AttributeValueId }); // Changed from ProductInventoryId to ProductId
+                // Relationship with Product
+                entity.HasOne(pia => pia.Product)
+                    .WithMany(p => p.ProductImageAssignments)
+                    .HasForeignKey(pia => pia.ProductId)
+                    .OnDelete(DeleteBehavior.Cascade);
 
-            modelBuilder.Entity<InventoryAttributeValue>()
-                .HasOne(iav => iav.Product) // Changed from ProductInventory to Product
-                .WithMany(p => p.InventoryAttributeValues) // Changed from ProductInventory to Product
-                .HasForeignKey(iav => iav.ProductId); // Changed from ProductInventoryId to ProductId
-
-            modelBuilder.Entity<InventoryAttributeValue>()
-                .HasOne(iav => iav.AttributeValue)
-                .WithMany()
-                .HasForeignKey(iav => iav.AttributeValueId);
-
-            modelBuilder.Entity<ProductImageAttributeValue>()
-                .HasKey(p => new { p.ProductImageId, p.AttributeValueId });
-
-            modelBuilder.Entity<ProductImageAttributeValue>()
-                .HasOne(p => p.ProductImage)
-                .WithMany(i => i.ProductImageAttributeValues)
-                .HasForeignKey(p => p.ProductImageId);
+                // Relationship with ProductImage
+                entity.HasOne(pia => pia.ProductImage)
+                    .WithMany(pi => pi.ProductImageAssignments)
+                    .HasForeignKey(pia => pia.ProductImageId)
+                    .OnDelete(DeleteBehavior.Cascade);
+            });
         }
     }
 }

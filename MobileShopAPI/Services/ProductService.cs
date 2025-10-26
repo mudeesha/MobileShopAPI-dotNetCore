@@ -150,12 +150,6 @@ namespace MobileShopAPI.Services
                 ProductId = product.Id
             }).ToList();
             
-            product.InventoryAttributeValues = attributeValues.Select(av => new InventoryAttributeValue
-            {
-                AttributeValueId = av.Id,
-                ProductId = product.Id
-            }).ToList();
-            
             await _productRepo.SaveChangesAsync();
 
             return await GetByIdAsync(product.Id) ?? throw new Exception("Failed to load created product");

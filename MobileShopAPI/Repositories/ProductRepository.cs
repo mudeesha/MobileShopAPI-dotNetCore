@@ -23,8 +23,6 @@ namespace MobileShopAPI.Repositories
                     .ThenInclude(pa => pa.AttributeValue)
                     .ThenInclude(av => av.AttributeType)
                 .Include(p => p.ProductImages)
-                .Include(p => p.InventoryAttributeValues)
-                    .ThenInclude(iav => iav.AttributeValue)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -48,8 +46,6 @@ namespace MobileShopAPI.Repositories
                     .ThenInclude(pa => pa.AttributeValue)
                     .ThenInclude(av => av.AttributeType)
                 .Include(p => p.ProductImages)
-                .Include(p => p.InventoryAttributeValues)
-                    .ThenInclude(iav => iav.AttributeValue)
                 .AsQueryable();
         }
 
