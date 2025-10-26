@@ -4,15 +4,14 @@ namespace MobileShopAPI.Models
 {
     public class ProductAttribute
     {
-        public int Id { get; set; }
-
-        public int AttributeValueId { get; set; }
-        [ForeignKey(nameof(AttributeValueId))]
-        public AttributeValue AttributeValue { get; set; } = null!;
-
         public int ProductId { get; set; }
-        [ForeignKey(nameof(ProductId))]
-        public Product Product { get; set; } = null!;
+        public int AttributeValueId { get; set; }
+
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
+
+        [ForeignKey("AttributeValueId")]
+        public virtual AttributeValue? AttributeValue { get; set; }
     }
 }
 

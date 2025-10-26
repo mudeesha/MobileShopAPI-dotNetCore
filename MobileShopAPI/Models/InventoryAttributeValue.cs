@@ -5,14 +5,13 @@ namespace MobileShopAPI.Models
 {
     public class InventoryAttributeValue
     {
-        [Required]
-        public int ProductInventoryId { get; set; }
-
-        [Required]
+        public int ProductId { get; set; } // This should exist now
         public int AttributeValueId { get; set; }
 
-        // Navigation
-        public ProductInventory ProductInventory { get; set; } = null!;
-        public AttributeValue AttributeValue { get; set; } = null!;
+        [ForeignKey("ProductId")]
+        public virtual Product? Product { get; set; }
+
+        [ForeignKey("AttributeValueId")]
+        public virtual AttributeValue? AttributeValue { get; set; }
     }
 }

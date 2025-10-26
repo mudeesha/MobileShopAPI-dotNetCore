@@ -1,25 +1,41 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using MobileShopAPI.Models;
+﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MobileShopAPI.Models
 {
     public class Product
     {
+        [Key]
         public int Id { get; set; }
 
-        public int BrandId { get; set; }
-        public Brand? Brand { get; set; }
-
+        [Required]
         public int ModelId { get; set; }
-        public Model? Model { get; set; }
 
-        public string SKU { get; set; } = string.Empty;
+        [Required]
+        public string SKU { get; set; } = null!;
 
-        public ICollection<ProductAttribute> ProductAttributes { get; set; } = new List<ProductAttribute>();
-        public List<ProductInventory> ProductInventories { get; set; } = new();
+        [Required]
+        public int StockQuantity { get; set; }
 
-        public List<ProductImage> ProductImages { get; set; } = new();
+        [Required]
+        [Column(TypeName = "decimal(18,2)")]
+        public decimal Price { get; set; }
 
+        // Navigation properties
+        [ForeignKey("ModelId")]
+        public virtual Model? Model { get; set; }
+
+        // Product Attributes (many-to-many with AttributeValue)
+        public virtual ICollection<ProductAttribute>? ProductAttributes { get; set; }
+
+        // Product Images
+        public virtual ICollection<ProductImage>? ProductImages { get; set; }
+
+        // Inventory Attribute Values (for variants)
+        public virtual ICollection<InventoryAttributeValue>? InventoryAttributeValues { get; set; }
+
+        // Timestamps (optional - add if needed)
+        public DateTime? CreatedDate { get; set; } = DateTime.UtcNow;
+        public DateTime? UpdatedDate { get; set; } = DateTime.UtcNow;
     }
-
 }

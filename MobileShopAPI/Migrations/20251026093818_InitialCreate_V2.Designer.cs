@@ -12,8 +12,8 @@ using MobileShopAPI.Data;
 namespace MobileShopAPI.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20250802082225_MovePriceAndStockToProductInventory")]
-    partial class MovePriceAndStockToProductInventory
+    [Migration("20251026093818_InitialCreate_V2")]
+    partial class InitialCreate_V2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -279,13 +279,13 @@ namespace MobileShopAPI.Migrations
 
             modelBuilder.Entity("MobileShopAPI.Models.InventoryAttributeValue", b =>
                 {
-                    b.Property<int>("ProductInventoryId")
+                    b.Property<int>("ProductId")
                         .HasColumnType("int");
 
                     b.Property<int>("AttributeValueId")
                         .HasColumnType("int");
 
-                    b.HasKey("ProductInventoryId", "AttributeValueId");
+                    b.HasKey("ProductId", "AttributeValueId");
 
                     b.HasIndex("AttributeValueId");
 
@@ -322,19 +322,27 @@ namespace MobileShopAPI.Migrations
 
                     MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BrandId")
-                        .HasColumnType("int");
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime(6)");
 
                     b.Property<int>("ModelId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("Price")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
 
                     b.Property<string>("SKU")
                         .IsRequired()
                         .HasColumnType("longtext");
 
-                    b.HasKey("Id");
+                    b.Property<int>("StockQuantity")
+                        .HasColumnType("int");
 
-                    b.HasIndex("BrandId");
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime(6)");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("ModelId");
 
@@ -347,9 +355,6 @@ namespace MobileShopAPI.Migrations
                         .HasColumnType("int");
 
                     b.Property<int>("AttributeValueId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("Id")
                         .HasColumnType("int");
 
                     b.HasKey("ProductId", "AttributeValueId");
@@ -397,30 +402,6 @@ namespace MobileShopAPI.Migrations
                     b.HasIndex("AttributeValueId");
 
                     b.ToTable("ProductImageAttributeValue");
-                });
-
-            modelBuilder.Entity("MobileShopAPI.Models.ProductInventory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    MySqlPropertyBuilderExtensions.UseMySqlIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("decimal(65,30)");
-
-                    b.Property<int>("ProductId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("StockQuantity")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductInventories");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -493,15 +474,15 @@ namespace MobileShopAPI.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MobileShopAPI.Models.ProductInventory", "ProductInventory")
+                    b.HasOne("MobileShopAPI.Models.Product", "Product")
                         .WithMany("InventoryAttributeValues")
-                        .HasForeignKey("ProductInventoryId")
+                        .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("AttributeValue");
 
-                    b.Navigation("ProductInventory");
+                    b.Navigation("Product");
                 });
 
             modelBuilder.Entity("MobileShopAPI.Models.Model", b =>
@@ -517,19 +498,11 @@ namespace MobileShopAPI.Migrations
 
             modelBuilder.Entity("MobileShopAPI.Models.Product", b =>
                 {
-                    b.HasOne("MobileShopAPI.Models.Brand", "Brand")
-                        .WithMany()
-                        .HasForeignKey("BrandId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MobileShopAPI.Models.Model", "Model")
-                        .WithMany()
+                        .WithMany("Products")
                         .HasForeignKey("ModelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("Brand");
 
                     b.Navigation("Model");
                 });
@@ -556,7 +529,7 @@ namespace MobileShopAPI.Migrations
             modelBuilder.Entity("MobileShopAPI.Models.ProductImage", b =>
                 {
                     b.HasOne("MobileShopAPI.Models.Product", "Product")
-                        .WithMany()
+                        .WithMany("ProductImages")
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -583,17 +556,6 @@ namespace MobileShopAPI.Migrations
                     b.Navigation("ProductImage");
                 });
 
-            modelBuilder.Entity("MobileShopAPI.Models.ProductInventory", b =>
-                {
-                    b.HasOne("MobileShopAPI.Models.Product", "Product")
-                        .WithMany()
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("MobileShopAPI.Models.AttributeType", b =>
                 {
                     b.Navigation("AttributeValues");
@@ -609,19 +571,23 @@ namespace MobileShopAPI.Migrations
                     b.Navigation("Models");
                 });
 
+            modelBuilder.Entity("MobileShopAPI.Models.Model", b =>
+                {
+                    b.Navigation("Products");
+                });
+
             modelBuilder.Entity("MobileShopAPI.Models.Product", b =>
                 {
+                    b.Navigation("InventoryAttributeValues");
+
                     b.Navigation("ProductAttributes");
+
+                    b.Navigation("ProductImages");
                 });
 
             modelBuilder.Entity("MobileShopAPI.Models.ProductImage", b =>
                 {
                     b.Navigation("ProductImageAttributeValues");
-                });
-
-            modelBuilder.Entity("MobileShopAPI.Models.ProductInventory", b =>
-                {
-                    b.Navigation("InventoryAttributeValues");
                 });
 #pragma warning restore 612, 618
         }

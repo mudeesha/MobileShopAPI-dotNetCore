@@ -73,8 +73,9 @@ builder.Services.AddScoped<IAttributeValueService, AttributeValueService>();
 builder.Services.AddScoped<IAttributeTypeRepository, AttributeTypeRepository>();
 builder.Services.AddScoped<IAttributeTypeService, AttributeTypeService>();
 
-builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
-builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
+// REMOVE THESE TWO LINES - ProductInventory is no longer used
+// builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
+// builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
 
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();

@@ -7,7 +7,7 @@ namespace MobileShopAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class AttributeValuesController : ControllerBase
     {
         private readonly IAttributeValueService _service;
@@ -18,7 +18,7 @@ namespace MobileShopAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin, Customer, Staff")]
+        //[Authorize(Roles = "Admin, Customer, Staff")]
         public async Task<ActionResult<List<AttributeValueDto>>> GetAll()
         {
             var values = await _service.GetAllAsync();
@@ -33,7 +33,7 @@ namespace MobileShopAPI.Controllers
         }
 
         [HttpPost("type-with-values")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> CreateTypeWithValues(AttributeTypeWithValuesCreateDto dto)
         {
             try

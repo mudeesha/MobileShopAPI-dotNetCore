@@ -10,65 +10,52 @@ namespace MobileShopAPI.Services
     {
         private readonly IProductRepository _productRepo;
         private readonly IAttributeValueRepository _attributeRepo;
-        private readonly IProductInventoryRepository _inventoryRepo;
         private readonly IProductImageRepository _imageRepo;
+
+        // REMOVE: IProductInventoryRepository _inventoryRepo
 
         public ProductService(
             IProductRepository productRepo,
             IAttributeValueRepository attributeRepo,
-            IProductInventoryRepository inventoryRepo,
-            IProductImageRepository imageRepo)
+            IProductImageRepository imageRepo) // Remove inventoryRepo parameter
         {
             _productRepo = productRepo ?? throw new ArgumentNullException(nameof(productRepo));
             _attributeRepo = attributeRepo ?? throw new ArgumentNullException(nameof(attributeRepo));
-            _inventoryRepo = inventoryRepo ?? throw new ArgumentNullException(nameof(inventoryRepo));
             _imageRepo = imageRepo ?? throw new ArgumentNullException(nameof(imageRepo));
         }
 
         public async Task<PagedResultDto<ProductDto>> GetAllAsync(
             string? searchTerm = null,
-            int pageNumber = 1,
+            int pageNumber = 1, 
             int pageSize = 10)
         {
-            // Build the base query with includes
-            var baseQuery = _productRepo.Query()
-                .Include(p => p.Brand)
-                .Include(p => p.Model)
-                .Include(p => p.ProductAttributes)
-                    .ThenInclude(pa => pa.AttributeValue)
-                    .ThenInclude(av => av.AttributeType)
-                .Include(p => p.ProductInventories)
-                .Include(p => p.ProductImages)
-                    .ThenInclude(pi => pi.ProductImageAttributeValues)
-                    .ThenInclude(piav => piav.AttributeValue);
+            var query = _productRepo.Query();
 
-            // Apply search filter to the base query
-            IQueryable<Product> filteredQuery = baseQuery; // Explicitly type as IQueryable<Product>
-
+            // Search filter
             if (!string.IsNullOrEmpty(searchTerm))
             {
-                filteredQuery = filteredQuery.Where(p =>
+                query = query.Where(p =>
                     p.SKU.Contains(searchTerm) ||
-                    p.Brand.Name.Contains(searchTerm) ||
+                    p.Model.Brand.Name.Contains(searchTerm) || // Access brand via Model
                     p.Model.Name.Contains(searchTerm));
             }
 
             // Count total before pagination
-            var totalCount = await filteredQuery.CountAsync();
+            var totalCount = await query.CountAsync();
 
             // Apply pagination
-            var products = await filteredQuery
+            var products = await query
                 .Skip((pageNumber - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();
 
-            // Map to DTO (rest of your code remains the same)
+            // Map to DTO
             var productDtos = products.Select(p => new ProductDto
             {
                 Id = p.Id,
                 SKU = p.SKU,
-                BrandId = p.BrandId,
-                BrandName = p.Brand?.Name ?? "",
+                BrandId = p.Model.BrandId, // Get BrandId from Model
+                BrandName = p.Model.Brand?.Name ?? "",
                 ModelId = p.ModelId,
                 ModelName = p.Model?.Name ?? "",
                 Attributes = p.ProductAttributes.Select(pa => new AttributeValueDto
@@ -77,8 +64,8 @@ namespace MobileShopAPI.Services
                     Type = pa.AttributeValue.AttributeType.Name,
                     Value = pa.AttributeValue.Value
                 }).ToList(),
-                StockQuantity = p.ProductInventories.FirstOrDefault()?.StockQuantity ?? 0,
-                Price = p.ProductInventories.FirstOrDefault()?.Price ?? 0,
+                StockQuantity = p.StockQuantity, // Direct from Product now
+                Price = p.Price, // Direct from Product now
                 Images = p.ProductImages.Select(img => new ProductImageDto
                 {
                     Id = img.Id,
@@ -104,25 +91,15 @@ namespace MobileShopAPI.Services
 
         public async Task<ProductDto?> GetByIdAsync(int id)
         {
-            var p = await _productRepo.Query()
-                .Include(p => p.Brand)
-                .Include(p => p.Model)
-                .Include(p => p.ProductAttributes)
-                    .ThenInclude(pa => pa.AttributeValue)
-                    .ThenInclude(av => av.AttributeType)
-                .Include(p => p.ProductInventories)
-                .Include(p => p.ProductImages)
-                    .ThenInclude(pi => pi.ProductImageAttributeValues)
-                .FirstOrDefaultAsync(p => p.Id == id);
-
+            var p = await _productRepo.GetByIdAsync(id);
             if (p == null) return null;
 
             return new ProductDto
             {
                 Id = p.Id,
                 SKU = p.SKU,
-                BrandId = p.BrandId,
-                BrandName = p.Brand?.Name ?? "",
+                BrandId = p.Model.BrandId, // Get BrandId from Model
+                BrandName = p.Model.Brand?.Name ?? "",
                 ModelId = p.ModelId,
                 ModelName = p.Model?.Name ?? "",
                 Attributes = p.ProductAttributes.Select(pa => new AttributeValueDto
@@ -131,8 +108,8 @@ namespace MobileShopAPI.Services
                     Type = pa.AttributeValue.AttributeType.Name,
                     Value = pa.AttributeValue.Value
                 }).ToList(),
-                StockQuantity = p.ProductInventories.FirstOrDefault()?.StockQuantity ?? 0,
-                Price = p.ProductInventories.FirstOrDefault()?.Price ?? 0,
+                StockQuantity = p.StockQuantity, // Direct from Product
+                Price = p.Price, // Direct from Product
                 Images = p.ProductImages.Select(img => new ProductImageDto
                 {
                     Id = img.Id,
@@ -151,90 +128,37 @@ namespace MobileShopAPI.Services
         public async Task<ProductDto> CreateAsync(ProductCreateDto dto)
         {
             var attributeValues = await _attributeRepo.GetByIdsAsync(dto.AttributeValueIds);
+            
+            ValidateAttributeValues(attributeValues);
+            
+            await ValidateUniqueProductAsync(dto.ModelId, attributeValues);
 
             var product = new Product
             {
-                BrandId = dto.BrandId,
                 ModelId = dto.ModelId,
-                SKU = GenerateSKU(dto.ModelId, attributeValues)
+                SKU = GenerateSKU(dto.ModelId, attributeValues),
+                Price = dto.Price,
+                StockQuantity = dto.StockQuantity
             };
 
             await _productRepo.AddAsync(product);
-            await _productRepo.SaveChangesAsync(); // Save to get product.Id
+            await _productRepo.SaveChangesAsync();
 
             product.ProductAttributes = attributeValues.Select(av => new ProductAttribute
             {
                 AttributeValueId = av.Id,
                 ProductId = product.Id
             }).ToList();
-
-            // Add Inventory
-            var inventory = new ProductInventory
+            
+            product.InventoryAttributeValues = attributeValues.Select(av => new InventoryAttributeValue
             {
-                ProductId = product.Id,
-                Price = dto.Price,
-                StockQuantity = dto.StockQuantity,
-                InventoryAttributeValues = attributeValues.Select(av => new InventoryAttributeValue
-                {
-                    AttributeValueId = av.Id
-                }).ToList()
-            };
-            await _inventoryRepo.AddAsync(inventory);
-
-            // Optional: Add basic image during creation (without variant linking)
-            if (!string.IsNullOrEmpty(dto.ImageUrl))
-            {
-                var image = new ProductImage
-                {
-                    ProductId = product.Id,
-                    ImageUrl = dto.ImageUrl,
-                    IsDefault = true
-                };
-                await _imageRepo.AddAsync(image);
-            }
-
+                AttributeValueId = av.Id,
+                ProductId = product.Id
+            }).ToList();
+            
             await _productRepo.SaveChangesAsync();
 
             return await GetByIdAsync(product.Id) ?? throw new Exception("Failed to load created product");
-        }
-
-        // NEW METHOD: Add variant-specific images after product creation
-        public async Task<ProductImageDto> AddVariantImageAsync(ProductImageCreateDto dto)
-        {
-            var product = await _productRepo.GetByIdAsync(dto.ProductId);
-            if (product == null)
-                throw new ArgumentException("Product not found");
-
-            var image = new ProductImage
-            {
-                ProductId = dto.ProductId,
-                ImageUrl = dto.ImageUrl,
-                IsDefault = dto.IsDefault
-            };
-
-            // Link to specific appearance attributes (color, antenna, etc.)
-            if (dto.AppearanceAttributeValueIds?.Any() == true)
-            {
-                image.ProductImageAttributeValues = dto.AppearanceAttributeValueIds
-                    .Select(avId => new ProductImageAttributeValue
-                    {
-                        AttributeValueId = avId
-                    }).ToList();
-            }
-
-            await _imageRepo.AddAsync(image);
-            await _imageRepo.SaveChangesAsync();
-
-            return new ProductImageDto
-            {
-                Id = image.Id,
-                ProductId = image.ProductId,
-                ImageUrl = image.ImageUrl,
-                IsDefault = image.IsDefault,
-                AttributeValueIds = image.ProductImageAttributeValues?
-                    .Select(piav => piav.AttributeValueId)
-                    .ToList() ?? new List<int>()
-            };
         }
 
         public async Task<bool> DeleteAsync(int id)
@@ -249,8 +173,59 @@ namespace MobileShopAPI.Services
 
         private string GenerateSKU(int modelId, List<AttributeValue> attributes)
         {
-            var parts = attributes.Select(a => a.Value);
+            // Group by attribute type and take only one value per type
+            var distinctAttributes = attributes
+                .GroupBy(a => a.AttributeTypeId)
+                .Select(g => g.First())
+                .OrderBy(a => a.AttributeTypeId);
+
+            var parts = distinctAttributes.Select(a => a.Value);
             return $"M{modelId}-" + string.Join("-", parts);
+        }
+        
+        private void ValidateAttributeValues(List<AttributeValue> attributeValues)
+        {
+            // Group by AttributeTypeId to find duplicates
+            var duplicateTypes = attributeValues
+                .GroupBy(av => av.AttributeTypeId)
+                .Where(g => g.Count() > 1)
+                .Select(g => g.First().AttributeType?.Name)
+                .ToList();
+
+            if (duplicateTypes.Any())
+            {
+                throw new ArgumentException(
+                    $"Product cannot have multiple values for the same attribute type. " +
+                    $"Duplicate types: {string.Join(", ", duplicateTypes)}");
+            }
+        }
+        
+        private async Task ValidateUniqueProductAsync(int modelId, List<AttributeValue> attributeValues)
+        {
+            // Get all existing products for this model
+            var existingProducts = await _productRepo.GetByModelIdAsync(modelId);
+    
+            foreach (var existingProduct in existingProducts)
+            {
+                var existingAttributeIds = existingProduct.ProductAttributes
+                    .Select(pa => pa.AttributeValueId)
+                    .OrderBy(id => id)
+                    .ToList();
+            
+                var newAttributeIds = attributeValues
+                    .Select(av => av.Id)
+                    .OrderBy(id => id)
+                    .ToList();
+        
+                // Check if both products have exactly the same attributes
+                if (existingAttributeIds.SequenceEqual(newAttributeIds))
+                {
+                    var attributeNames = string.Join(", ", attributeValues.Select(av => av.Value));
+                    throw new ArgumentException(
+                        $"A product with model ID {modelId} and attributes [{attributeNames}] already exists. " +
+                        $"Existing product ID: {existingProduct.Id}");
+                }
+            }
         }
     }
 }

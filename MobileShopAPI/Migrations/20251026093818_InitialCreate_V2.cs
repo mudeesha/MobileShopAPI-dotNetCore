@@ -7,11 +7,49 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace MobileShopAPI.Migrations
 {
     /// <inheritdoc />
-    public partial class InitialIdentityRegisterMigration : Migration
+    public partial class InitialCreate_V2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Products_Brands_BrandId",
+                table: "Products");
+
+            migrationBuilder.DropIndex(
+                name: "IX_Products_BrandId",
+                table: "Products");
+
+            migrationBuilder.DropColumn(
+                name: "BrandId",
+                table: "Products");
+
+            migrationBuilder.DropColumn(
+                name: "Id",
+                table: "ProductAttributes");
+
+            migrationBuilder.AlterColumn<decimal>(
+                name: "Price",
+                table: "Products",
+                type: "decimal(18,2)",
+                precision: 18,
+                scale: 2,
+                nullable: false,
+                oldClrType: typeof(decimal),
+                oldType: "decimal(65,30)");
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "CreatedDate",
+                table: "Products",
+                type: "datetime(6)",
+                nullable: true);
+
+            migrationBuilder.AddColumn<DateTime>(
+                name: "UpdatedDate",
+                table: "Products",
+                type: "datetime(6)",
+                nullable: true);
+
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
@@ -63,6 +101,54 @@ namespace MobileShopAPI.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "InventoryAttributeValues",
+                columns: table => new
+                {
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    AttributeValueId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_InventoryAttributeValues", x => new { x.ProductId, x.AttributeValueId });
+                    table.ForeignKey(
+                        name: "FK_InventoryAttributeValues_AttributeValues_AttributeValueId",
+                        column: x => x.AttributeValueId,
+                        principalTable: "AttributeValues",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_InventoryAttributeValues_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
+            migrationBuilder.CreateTable(
+                name: "ProductImages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
+                    ProductId = table.Column<int>(type: "int", nullable: false),
+                    ImageUrl = table.Column<string>(type: "longtext", nullable: false)
+                        .Annotation("MySql:CharSet", "utf8mb4"),
+                    IsDefault = table.Column<bool>(type: "tinyint(1)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductImages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_ProductImages_Products_ProductId",
+                        column: x => x.ProductId,
+                        principalTable: "Products",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
@@ -193,6 +279,31 @@ namespace MobileShopAPI.Migrations
                 })
                 .Annotation("MySql:CharSet", "utf8mb4");
 
+            migrationBuilder.CreateTable(
+                name: "ProductImageAttributeValue",
+                columns: table => new
+                {
+                    ProductImageId = table.Column<int>(type: "int", nullable: false),
+                    AttributeValueId = table.Column<int>(type: "int", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_ProductImageAttributeValue", x => new { x.ProductImageId, x.AttributeValueId });
+                    table.ForeignKey(
+                        name: "FK_ProductImageAttributeValue_AttributeValues_AttributeValueId",
+                        column: x => x.AttributeValueId,
+                        principalTable: "AttributeValues",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_ProductImageAttributeValue_ProductImages_ProductImageId",
+                        column: x => x.ProductImageId,
+                        principalTable: "ProductImages",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                })
+                .Annotation("MySql:CharSet", "utf8mb4");
+
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
                 table: "AspNetRoleClaims",
@@ -229,6 +340,21 @@ namespace MobileShopAPI.Migrations
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_InventoryAttributeValues_AttributeValueId",
+                table: "InventoryAttributeValues",
+                column: "AttributeValueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductImageAttributeValue_AttributeValueId",
+                table: "ProductImageAttributeValue",
+                column: "AttributeValueId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_ProductImages_ProductId",
+                table: "ProductImages",
+                column: "ProductId");
         }
 
         /// <inheritdoc />
@@ -250,10 +376,64 @@ namespace MobileShopAPI.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "InventoryAttributeValues");
+
+            migrationBuilder.DropTable(
+                name: "ProductImageAttributeValue");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
+
+            migrationBuilder.DropTable(
+                name: "ProductImages");
+
+            migrationBuilder.DropColumn(
+                name: "CreatedDate",
+                table: "Products");
+
+            migrationBuilder.DropColumn(
+                name: "UpdatedDate",
+                table: "Products");
+
+            migrationBuilder.AlterColumn<decimal>(
+                name: "Price",
+                table: "Products",
+                type: "decimal(65,30)",
+                nullable: false,
+                oldClrType: typeof(decimal),
+                oldType: "decimal(18,2)",
+                oldPrecision: 18,
+                oldScale: 2);
+
+            migrationBuilder.AddColumn<int>(
+                name: "BrandId",
+                table: "Products",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.AddColumn<int>(
+                name: "Id",
+                table: "ProductAttributes",
+                type: "int",
+                nullable: false,
+                defaultValue: 0);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Products_BrandId",
+                table: "Products",
+                column: "BrandId");
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Products_Brands_BrandId",
+                table: "Products",
+                column: "BrandId",
+                principalTable: "Brands",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
     }
 }

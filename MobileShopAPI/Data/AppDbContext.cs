@@ -17,7 +17,7 @@ namespace MobileShopAPI.Data
         public DbSet<AttributeType> AttributeTypes { get; set; }
         public DbSet<AttributeValue> AttributeValues { get; set; }
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
-        public DbSet<ProductInventory> ProductInventories { get; set; }
+        // Remove this line: public DbSet<ProductInventory> ProductInventories { get; set; }
         public DbSet<InventoryAttributeValue> InventoryAttributeValues { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
 
@@ -26,6 +26,14 @@ namespace MobileShopAPI.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
+
+            // Configure Product (ADD THIS NEW CONFIGURATION)
+            modelBuilder.Entity<Product>(entity =>
+            {
+                // Configure decimal precision for Price
+                entity.Property(p => p.Price)
+                      .HasPrecision(18, 2);
+            });
 
             modelBuilder.Entity<ProductAttribute>()
                 .HasKey(pa => new { pa.ProductId, pa.AttributeValueId });
@@ -40,13 +48,14 @@ namespace MobileShopAPI.Data
                 .WithMany(av => av.ProductAttributes)
                 .HasForeignKey(pa => pa.AttributeValueId);
 
+            // UPDATE InventoryAttributeValue configuration
             modelBuilder.Entity<InventoryAttributeValue>()
-                .HasKey(iav => new { iav.ProductInventoryId, iav.AttributeValueId });
+                .HasKey(iav => new { iav.ProductId, iav.AttributeValueId }); // Changed from ProductInventoryId to ProductId
 
             modelBuilder.Entity<InventoryAttributeValue>()
-                .HasOne(iav => iav.ProductInventory)
-                .WithMany(pi => pi.InventoryAttributeValues)
-                .HasForeignKey(iav => iav.ProductInventoryId);
+                .HasOne(iav => iav.Product) // Changed from ProductInventory to Product
+                .WithMany(p => p.InventoryAttributeValues) // Changed from ProductInventory to Product
+                .HasForeignKey(iav => iav.ProductId); // Changed from ProductInventoryId to ProductId
 
             modelBuilder.Entity<InventoryAttributeValue>()
                 .HasOne(iav => iav.AttributeValue)
@@ -60,10 +69,6 @@ namespace MobileShopAPI.Data
                 .HasOne(p => p.ProductImage)
                 .WithMany(i => i.ProductImageAttributeValues)
                 .HasForeignKey(p => p.ProductImageId);
-
-
-
-
         }
     }
 }

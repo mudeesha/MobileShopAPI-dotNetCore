@@ -7,7 +7,6 @@ namespace MobileShopAPI.Services.Interfaces
         Task<PagedResultDto<ProductDto>> GetAllAsync(string? searchTerm = null, int pageNumber = 1, int pageSize = 10);
         Task<ProductDto?> GetByIdAsync(int id);
         Task<ProductDto> CreateAsync(ProductCreateDto dto);
-        Task<ProductImageDto> AddVariantImageAsync(ProductImageCreateDto dto); // NEW
         Task<bool> DeleteAsync(int id);
     }
 }

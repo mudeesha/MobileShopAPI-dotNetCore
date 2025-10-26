@@ -7,7 +7,7 @@ namespace MobileShopAPI.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize]
+    //[Authorize]
     public class BrandsController : ControllerBase
     {
         private readonly IBrandService _brandService;
@@ -18,7 +18,7 @@ namespace MobileShopAPI.Controllers
         }
 
         [HttpGet]
-        [Authorize(Roles = "Admin, Customer, Staff")]
+        //[Authorize(Roles = "Admin, Customer, Staff")]
         public async Task<ActionResult<List<BrandDto>>> GetAll()
         {
             return Ok(await _brandService.GetAllBrandsAsync());
@@ -32,7 +32,7 @@ namespace MobileShopAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<ActionResult<BrandDto>> Create(BrandDto dto)
         {
             var created = await _brandService.CreateBrandAsync(dto);
@@ -40,7 +40,7 @@ namespace MobileShopAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int id)
         {
             var result = await _brandService.DeleteBrandAsync(id);
