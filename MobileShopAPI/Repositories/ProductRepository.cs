@@ -18,11 +18,13 @@ namespace MobileShopAPI.Repositories
         {
             return await _context.Products
                 .Include(p => p.Model)
-                    .ThenInclude(m => m.Brand)
+                .ThenInclude(m => m.Brand)
                 .Include(p => p.ProductAttributes)
-                    .ThenInclude(pa => pa.AttributeValue)
-                    .ThenInclude(av => av.AttributeType)
-                .Include(p => p.ProductImages)
+                .ThenInclude(pa => pa.AttributeValue)
+                .ThenInclude(av => av.AttributeType)
+                // ✅ UPDATE: Use ProductImageAssignments instead of direct ProductImages
+                .Include(p => p.ProductImageAssignments)
+                .ThenInclude(pia => pia.ProductImage)
                 .FirstOrDefaultAsync(p => p.Id == id);
         }
 
@@ -30,22 +32,26 @@ namespace MobileShopAPI.Repositories
         {
             return await _context.Products
                 .Include(p => p.Model)
-                    .ThenInclude(m => m.Brand)
+                .ThenInclude(m => m.Brand)
                 .Include(p => p.ProductAttributes)
-                    .ThenInclude(pa => pa.AttributeValue)
-                .Include(p => p.ProductImages)
+                .ThenInclude(pa => pa.AttributeValue)
+                // ✅ UPDATE: Use ProductImageAssignments
+                .Include(p => p.ProductImageAssignments)
+                .ThenInclude(pia => pia.ProductImage)
                 .ToListAsync();
         }
-
+        
         public IQueryable<Product> Query()
         {
             return _context.Products
                 .Include(p => p.Model)
-                    .ThenInclude(m => m.Brand)
+                .ThenInclude(m => m.Brand)
                 .Include(p => p.ProductAttributes)
-                    .ThenInclude(pa => pa.AttributeValue)
-                    .ThenInclude(av => av.AttributeType)
-                .Include(p => p.ProductImages)
+                .ThenInclude(pa => pa.AttributeValue)
+                .ThenInclude(av => av.AttributeType)
+                // ✅ UPDATE: Use ProductImageAssignments
+                .Include(p => p.ProductImageAssignments)
+                .ThenInclude(pia => pia.ProductImage)
                 .AsQueryable();
         }
 
@@ -77,7 +83,10 @@ namespace MobileShopAPI.Repositories
                 .Where(p => p.ModelId == modelId)
                 .Include(p => p.Model)
                 .Include(p => p.ProductAttributes)
-                    .ThenInclude(pa => pa.AttributeValue)
+                .ThenInclude(pa => pa.AttributeValue)
+                // ✅ UPDATE: Use ProductImageAssignments
+                .Include(p => p.ProductImageAssignments)
+                .ThenInclude(pia => pia.ProductImage)
                 .ToListAsync();
         }
 

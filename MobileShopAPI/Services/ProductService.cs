@@ -11,13 +11,12 @@ namespace MobileShopAPI.Services
         private readonly IProductRepository _productRepo;
         private readonly IAttributeValueRepository _attributeRepo;
         private readonly IProductImageRepository _imageRepo;
-
-        // REMOVE: IProductInventoryRepository _inventoryRepo
+        
 
         public ProductService(
             IProductRepository productRepo,
             IAttributeValueRepository attributeRepo,
-            IProductImageRepository imageRepo) // Remove inventoryRepo parameter
+            IProductImageRepository imageRepo)
         {
             _productRepo = productRepo ?? throw new ArgumentNullException(nameof(productRepo));
             _attributeRepo = attributeRepo ?? throw new ArgumentNullException(nameof(attributeRepo));
@@ -66,18 +65,15 @@ namespace MobileShopAPI.Services
                 }).ToList(),
                 StockQuantity = p.StockQuantity, // Direct from Product now
                 Price = p.Price, // Direct from Product now
-                Images = p.ProductImages.Select(img => new ProductImageDto
+                Images = p.ProductImageAssignments.Select(pia => new ProductImageDto
                 {
-                    Id = img.Id,
-                    ProductId = img.ProductId,
-                    ImageUrl = img.ImageUrl,
-                    IsDefault = img.IsDefault,
-                    AttributeValueIds = img.ProductImageAttributeValues?
-                        .Select(piav => piav.AttributeValueId)
-                        .ToList() ?? new List<int>()
+                    Id = pia.ProductImage.Id,
+                    ImageUrl = pia.ProductImage.ImageUrl,
+                    IsDefault = pia.IsDefault,
                 }).ToList(),
-                DefaultImageUrl = p.ProductImages.FirstOrDefault(i => i.IsDefault)?.ImageUrl
-                      ?? p.ProductImages.FirstOrDefault()?.ImageUrl
+                DefaultImageUrl = p.ProductImageAssignments
+                                      .FirstOrDefault(pia => pia.IsDefault)?.ProductImage?.ImageUrl
+                                  ?? p.ProductImageAssignments.FirstOrDefault()?.ProductImage?.ImageUrl
             }).ToList();
 
             return new PagedResultDto<ProductDto>
@@ -110,18 +106,15 @@ namespace MobileShopAPI.Services
                 }).ToList(),
                 StockQuantity = p.StockQuantity, // Direct from Product
                 Price = p.Price, // Direct from Product
-                Images = p.ProductImages.Select(img => new ProductImageDto
+                Images = p.ProductImageAssignments.Select(pia => new ProductImageDto
                 {
-                    Id = img.Id,
-                    ProductId = img.ProductId,
-                    ImageUrl = img.ImageUrl,
-                    IsDefault = img.IsDefault,
-                    AttributeValueIds = img.ProductImageAttributeValues?
-                        .Select(piav => piav.AttributeValueId)
-                        .ToList() ?? new List<int>()
+                    Id = pia.ProductImage.Id,
+                    ImageUrl = pia.ProductImage.ImageUrl,
+                    IsDefault = pia.IsDefault,
                 }).ToList(),
-                DefaultImageUrl = p.ProductImages.FirstOrDefault(i => i.IsDefault)?.ImageUrl
-                      ?? p.ProductImages.FirstOrDefault()?.ImageUrl
+                DefaultImageUrl = p.ProductImageAssignments
+                                      .FirstOrDefault(pia => pia.IsDefault)?.ProductImage?.ImageUrl
+                                  ?? p.ProductImageAssignments.FirstOrDefault()?.ProductImage?.ImageUrl
             };
         }
 

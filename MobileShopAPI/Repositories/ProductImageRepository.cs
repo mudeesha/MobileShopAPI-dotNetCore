@@ -93,7 +93,6 @@ namespace MobileShopAPI.Repositories
 
         public async Task SetDefaultImageAsync(int productId, int productImageId)
         {
-            // Reset all images to non-default for this product
             var assignments = await _context.ProductImageAssignments
                 .Where(pia => pia.ProductId == productId)
                 .ToListAsync();

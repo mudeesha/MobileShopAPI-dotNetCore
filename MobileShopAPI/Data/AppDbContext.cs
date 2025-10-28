@@ -19,6 +19,9 @@ namespace MobileShopAPI.Data
         public DbSet<ProductAttribute> ProductAttributes { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         
+        // ✅ ADD THIS MISSING DbSet
+        public DbSet<ProductImageAssignment> ProductImageAssignments { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

@@ -32,14 +32,7 @@ namespace MobileShopAPI.Repositories
 
         public async Task<List<Model>> GetAllWithProductsAsync()
         {
-            return await _context.Models
-                .Include(m => m.Brand)
-                .Include(m => m.Products)
-                .ThenInclude(p => p.ProductAttributes)
-                .ThenInclude(pa => pa.AttributeValue)
-                .Include(m => m.Products)
-                .ThenInclude(p => p.ProductImages)
-                .ToListAsync();
+            return null;
         }
 
 

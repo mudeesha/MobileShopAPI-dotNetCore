@@ -15,14 +15,58 @@ namespace MobileShopAPI.Controllers
             _imageService = imageService;
         }
 
-        [HttpPost("add-image")]
+        [HttpPost]
         public async Task<IActionResult> AddImage([FromBody] ProductImageCreateDto dto)
         {
-            if (dto.ProductId <= 0) // Fixed: ProductId instead of ProductIds
-                return BadRequest("A valid product ID is required.");
+            var image = await _imageService.CreateImageAsync(dto);
+            
+            // Assign to selected products
+            foreach (var productId in dto.ProductIds)
+            {
+                await _imageService.AssignImageToProductAsync(new ImageAssignmentDto
+                {
+                    ProductId = productId,
+                    ProductImageId = image.Id,
+                    IsDefault = dto.IsDefault
+                });
+            }
 
-            var image = await _imageService.AddProductImageAsync(dto);
             return Ok(image);
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateImage(int id, [FromBody] ProductImageUpdateDto dto)
+        {
+            // Update image details (description)
+            await _imageService.UpdateImageAsync(id, dto);
+
+            // Remove existing assignments
+            var existingProducts = await _imageService.GetProductsByImageAsync(id);
+            foreach (var product in existingProducts)
+            {
+                await _imageService.RemoveImageFromProductAsync(product.Id, id);
+            }
+
+            // Add new assignments
+            foreach (var productId in dto.ProductIds)
+            {
+                await _imageService.AssignImageToProductAsync(new ImageAssignmentDto
+                {
+                    ProductId = productId,
+                    ProductImageId = id,
+                    IsDefault = dto.IsDefault
+                });
+            }
+
+            return Ok(new { message = "Image updated successfully" });
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteImage(int id)
+        {
+            var result = await _imageService.DeleteImageAsync(id);
+            if (!result) return BadRequest("Image not found");
+            return Ok(new { message = "Image deleted successfully" });
         }
     }
 }

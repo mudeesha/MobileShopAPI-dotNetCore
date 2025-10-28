@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace MobileShopAPI.DTOs
 {
-    public class ProductImageCreateDto
+    public class ProductImageUpdateDto
     {
         [Required]
         public string ImageUrl { get; set; } = null!;
