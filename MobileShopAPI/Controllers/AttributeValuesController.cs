@@ -24,13 +24,40 @@ namespace MobileShopAPI.Controllers
             var values = await _service.GetAllAsync();
             return Ok(values);
         }
-
-        [HttpPost]
-        public async Task<ActionResult<AttributeValueDto>> Create(AttributeValueCreateDto dto)
+        
+        [HttpPost("bulk")]
+        public async Task<IActionResult> CreateBulk([FromBody] AttributeValueCreateDto dto)
         {
-            var created = await _service.CreateAsync(dto);
-            return CreatedAtAction(nameof(GetAll), new { id = created.Id }, created);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var result = await _service.CreateBulkAsync(dto);
+                return Ok(new { message = "Attribute values created successfully.", data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
+        
+        [HttpPut]
+        public async Task<IActionResult> Update([FromBody] AttributeValueUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+            try
+            {
+                var result = await _service.UpdateAsync(dto);
+                return Ok(new { message = "Attribute values updated successfully.", data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
+
 
         [HttpPost("type-with-values")]
         //[Authorize(Roles = "Admin")]

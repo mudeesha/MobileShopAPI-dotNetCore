@@ -28,5 +28,24 @@ namespace MobileShopAPI.Controllers
             var created = await _service.CreateAsync(dto);
             return CreatedAtAction(nameof(GetAll), new { id = created.Id }, created);
         }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Update(int id, [FromBody] AttributeTypeUpdateDto dto)
+        {
+            await _service.UpdateAsync(id, dto);
+            return Ok(new { message = "Attribute type updated successfully" });
+        }
+        
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var result = await _service.DeleteAsync(id);
+            if (!result)
+                return NotFound(new { message = $"Attribute type with ID {id} not found." });
+
+            return Ok(new { message = "Attribute type deleted successfully." });
+        }
+        
+        //willimplement get one api
     }
 }

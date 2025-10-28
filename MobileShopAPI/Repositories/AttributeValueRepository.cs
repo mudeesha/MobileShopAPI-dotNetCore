@@ -64,6 +64,12 @@ namespace MobileShopAPI.Repositories
                 .Where(v => v.AttributeTypeId == attributeTypeId)
                 .ToListAsync();
         }
+        
+        public async Task DeleteAsync(AttributeValue attributeValue)
+        {
+            _context.AttributeValues.Remove(attributeValue);
+            await Task.CompletedTask;
+        }
 
 
 

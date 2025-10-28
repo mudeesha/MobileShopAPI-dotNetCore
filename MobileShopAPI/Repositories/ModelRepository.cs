@@ -34,6 +34,12 @@ namespace MobileShopAPI.Repositories
         {
             return null;
         }
+        
+        public async Task UpdateAsync(Model model)
+        {
+            _context.Models.Update(model);
+            await _context.SaveChangesAsync();
+        }
 
 
     }

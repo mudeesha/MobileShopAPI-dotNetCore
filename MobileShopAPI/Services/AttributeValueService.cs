@@ -38,35 +38,113 @@ namespace MobileShopAPI.Services
             return result;
         }
 
-        public async Task<AttributeValueDto> CreateAsync(AttributeValueCreateDto dto)
+        public async Task<List<AttributeValueDto>> CreateBulkAsync(AttributeValueCreateDto dto)
         {
+            // 1️⃣ Check if attribute type exists
             var type = await _typeRepo.GetByIdAsync(dto.AttributeTypeId);
             if (type == null)
-                throw new Exception($"Attribute type with id {dto.AttributeTypeId} not found.");
+                throw new Exception($"Attribute type with ID {dto.AttributeTypeId} not found.");
 
-            // Check for duplicate value for the same attribute type
-            var existingValue = await _repo.GetByTypeAndValueAsync(dto.AttributeTypeId, dto.Value);
-            if (existingValue != null)
+            // 2️⃣ Remove duplicate values in request itself
+            var distinctValues = dto.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (!distinctValues.Any())
+                throw new Exception("No valid attribute values provided.");
+
+            var createdValues = new List<AttributeValueDto>();
+
+            foreach (var value in distinctValues)
             {
-                throw new Exception($"Value '{dto.Value}' already exists for attribute type '{type.Name}'.");
+                // 3️⃣ Check for existing value in DB
+                var existingValue = await _repo.GetByTypeAndValueAsync(dto.AttributeTypeId, value);
+                if (existingValue != null)
+                    continue; // Skip duplicate
+
+                var av = new AttributeValue
+                {
+                    AttributeTypeId = dto.AttributeTypeId,
+                    Value = value
+                };
+
+                await _repo.AddAsync(av);
+
+                createdValues.Add(new AttributeValueDto
+                {
+                    Id = av.Id,
+                    Type = type.Name,
+                    Value = av.Value
+                });
             }
 
-            var av = new AttributeValue
-            {
-                AttributeTypeId = dto.AttributeTypeId,
-                Value = dto.Value
-            };
+            if (!createdValues.Any())
+                throw new Exception("All provided values already exist for this attribute type.");
 
-            await _repo.AddAsync(av);
             await _repo.SaveChangesAsync();
 
-            return new AttributeValueDto
-            {
-                Id = av.Id,
-                Type = "",
-                Value = av.Value
-            };
+            return createdValues;
         }
+        
+        public async Task<List<AttributeValueDto>> UpdateAsync(AttributeValueUpdateDto dto)
+        {
+            // 1️⃣ Validate attribute type exists
+            var type = await _typeRepo.GetByIdAsync(dto.AttributeTypeId);
+            if (type == null)
+                throw new Exception($"Attribute type with ID {dto.AttributeTypeId} not found.");
+
+            // 2️⃣ Remove duplicates in request
+            var distinctValues = dto.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            if (!distinctValues.Any())
+                throw new Exception("No valid attribute values provided.");
+
+            // 3️⃣ Load existing values from DB
+            var existingValues = (await _repo.GetByAttributeTypeIdAsync(dto.AttributeTypeId)).ToList();
+            var existingValueStrings = existingValues.Select(ev => ev.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+            // 4️⃣ Determine values to delete
+            var toDelete = existingValues.Where(ev => !distinctValues.Contains(ev.Value, StringComparer.OrdinalIgnoreCase)).ToList();
+            foreach (var ev in toDelete)
+            {
+                await _repo.DeleteAsync(ev);
+            }
+
+            // 5️⃣ Determine values to add
+            var toAdd = distinctValues.Where(v => !existingValueStrings.Contains(v, StringComparer.OrdinalIgnoreCase)).ToList();
+            var addedValues = new List<AttributeValueDto>();
+
+            foreach (var value in toAdd)
+            {
+                var av = new AttributeValue
+                {
+                    AttributeTypeId = dto.AttributeTypeId,
+                    Value = value
+                };
+                await _repo.AddAsync(av);
+
+                addedValues.Add(new AttributeValueDto
+                {
+                    Id = av.Id,
+                    Type = type.Name,
+                    Value = av.Value
+                });
+            }
+
+            // 6️⃣ Save changes
+            await _repo.SaveChangesAsync();
+
+            // 7️⃣ Return **current full state of attribute values**
+            var finalValues = (await _repo.GetByAttributeTypeIdAsync(dto.AttributeTypeId))
+                .Select(av => new AttributeValueDto
+                {
+                    Id = av.Id,
+                    Type = type.Name,
+                    Value = av.Value
+                }).ToList();
+
+            return finalValues;
+        }
+
+        //will implement delete api
+        
+        //well implement get one api
 
         public async Task<(AttributeTypeDto Type, List<AttributeValueDto> Values)> CreateTypeWithValuesAsync(AttributeTypeWithValuesCreateDto dto)
         {

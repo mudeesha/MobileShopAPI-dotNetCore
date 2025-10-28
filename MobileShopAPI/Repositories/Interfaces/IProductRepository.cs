@@ -11,9 +11,8 @@ namespace MobileShopAPI.Repositories.Interfaces
         Task UpdateAsync(Product product);
         Task DeleteAsync(Product product);
         Task SaveChangesAsync();
-        
-        // Add any specific product queries you need
         Task<List<Product>> GetByModelIdAsync(int modelId);
         Task<Product?> GetBySkuAsync(string sku);
+        Task<bool> SKUExistsAsync(string sku, int excludeProductId);
     }
 }

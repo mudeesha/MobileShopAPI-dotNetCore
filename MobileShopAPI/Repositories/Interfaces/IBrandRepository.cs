@@ -9,6 +9,7 @@ namespace MobileShopAPI.Repositories.Interfaces
         Task<Brand?> GetByIdAsync(int id);
         Task AddAsync(Brand brand);
         Task DeleteAsync(Brand brand);
+        Task<Brand?> UpdateAsync(int id, Brand brand);
         Task SaveChangesAsync();
     }
 }

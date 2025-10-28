@@ -63,7 +63,7 @@ namespace MobileShopAPI.Repositories
         public async Task UpdateAsync(Product product)
         {
             _context.Products.Update(product);
-            await Task.CompletedTask;
+            await _context.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(Product product)
@@ -84,7 +84,6 @@ namespace MobileShopAPI.Repositories
                 .Include(p => p.Model)
                 .Include(p => p.ProductAttributes)
                 .ThenInclude(pa => pa.AttributeValue)
-                // ✅ UPDATE: Use ProductImageAssignments
                 .Include(p => p.ProductImageAssignments)
                 .ThenInclude(pia => pia.ProductImage)
                 .ToListAsync();
@@ -94,6 +93,12 @@ namespace MobileShopAPI.Repositories
         {
             return await _context.Products
                 .FirstOrDefaultAsync(p => p.SKU == sku);
+        }
+        
+        public async Task<bool> SKUExistsAsync(string sku, int excludeProductId)
+        {
+            return await _context.Products
+                .AnyAsync(p => p.SKU == sku && p.Id != excludeProductId);
         }
     }
 }

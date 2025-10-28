@@ -8,5 +8,6 @@ namespace MobileShopAPI.Services.Interfaces
         Task<ProductDto?> GetByIdAsync(int id);
         Task<ProductDto> CreateAsync(ProductCreateDto dto);
         Task<bool> DeleteAsync(int id);
+        Task<ProductDto> UpdateAsync(int id, ProductUpdateDto dto);
     }
 }

@@ -2,16 +2,19 @@
 using MobileShopAPI.Models;
 using MobileShopAPI.Repositories.Interfaces;
 using MobileShopAPI.Services.Interfaces;
+using AutoMapper;
 
 namespace MobileShopAPI.Services
 {
     public class BrandService : IBrandService
     {
         private readonly IBrandRepository _brandRepository;
+        private readonly IMapper _mapper;
 
-        public BrandService(IBrandRepository brandRepository)
+        public BrandService(IBrandRepository brandRepository, IMapper mapper)
         {
             _brandRepository = brandRepository;
+            _mapper = mapper;
         }
 
         public async Task<List<BrandDto>> GetAllBrandsAsync()
@@ -33,6 +36,22 @@ namespace MobileShopAPI.Services
             await _brandRepository.SaveChangesAsync();
 
             return new BrandDto { Id = brand.Id, Name = brand.Name };
+        }
+        
+        public async Task<BrandDto> UpdateAsync(int id, UpdateBrandDto updateBrandDto)
+        {
+            var existingBrand = await _brandRepository.GetByIdAsync(id);
+            if (existingBrand == null)
+                return null;
+            
+            _mapper.Map(updateBrandDto, existingBrand);
+            
+            var updatedBrand = await _brandRepository.UpdateAsync(id, existingBrand);
+            
+            if (updatedBrand == null)
+                return null;
+
+            return _mapper.Map<BrandDto>(updatedBrand);
         }
 
         public async Task<bool> DeleteBrandAsync(int id)

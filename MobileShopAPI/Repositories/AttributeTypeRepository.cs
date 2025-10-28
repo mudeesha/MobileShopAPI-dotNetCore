@@ -31,6 +31,16 @@ namespace MobileShopAPI.Repositories
             return await _context.AttributeTypes
                 .FirstOrDefaultAsync(t => t.Name.ToLower() == name.ToLower());
         }
+        
+        public async Task UpdateAsync(AttributeType attributeType)
+        {
+            _context.AttributeTypes.Update(attributeType);
+            await _context.SaveChangesAsync();
+        }
+        
+        public async Task DeleteAsync(AttributeType attributeType) =>
+            _context.AttributeTypes.Remove(attributeType);
 
+        
     }
 }

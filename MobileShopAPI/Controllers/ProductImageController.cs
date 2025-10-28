@@ -68,5 +68,7 @@ namespace MobileShopAPI.Controllers
             if (!result) return BadRequest("Image not found");
             return Ok(new { message = "Image deleted successfully" });
         }
+        
+        //will ipplement get all api
     }
 }

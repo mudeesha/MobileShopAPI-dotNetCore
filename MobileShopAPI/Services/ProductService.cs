@@ -11,16 +11,19 @@ namespace MobileShopAPI.Services
         private readonly IProductRepository _productRepo;
         private readonly IAttributeValueRepository _attributeRepo;
         private readonly IProductImageRepository _imageRepo;
+        private readonly IModelRepository _modelRepository;
         
 
         public ProductService(
             IProductRepository productRepo,
             IAttributeValueRepository attributeRepo,
-            IProductImageRepository imageRepo)
+            IProductImageRepository imageRepo,
+            IModelRepository modelRepository)
         {
             _productRepo = productRepo ?? throw new ArgumentNullException(nameof(productRepo));
             _attributeRepo = attributeRepo ?? throw new ArgumentNullException(nameof(attributeRepo));
             _imageRepo = imageRepo ?? throw new ArgumentNullException(nameof(imageRepo));
+            _modelRepository = modelRepository;
         }
 
         public async Task<PagedResultDto<ProductDto>> GetAllAsync(
@@ -213,6 +216,71 @@ namespace MobileShopAPI.Services
                         $"Existing product ID: {existingProduct.Id}");
                 }
             }
+        }
+        
+        public async Task<ProductDto> UpdateAsync(int id, ProductUpdateDto dto)
+        {
+            // 1️⃣ Get existing product
+            var existingProduct = await _productRepo.GetByIdAsync(id);
+            if (existingProduct == null)
+                throw new KeyNotFoundException($"Product with ID {id} not found.");
+
+            // 2️⃣ Validate model
+            var model = await _modelRepository.GetByIdAsync(dto.ModelId);
+            if (model == null)
+                throw new KeyNotFoundException($"Model with ID {dto.ModelId} not found.");
+
+            // 3️⃣ Get and validate attributes
+            var attributeValues = await _attributeRepo.GetByIdsAsync(dto.AttributeValueIds);
+            ValidateAttributeValues(attributeValues);
+
+            // 4️⃣ Temporarily exclude current product from duplicate check
+            var allProductsForModel = await _productRepo.GetByModelIdAsync(dto.ModelId);
+            var otherProducts = allProductsForModel.Where(p => p.Id != id).ToList();
+
+            // Manually call your existing validation against filtered list
+            foreach (var existing in otherProducts)
+            {
+                var existingAttributeIds = existing.ProductAttributes
+                    .Select(pa => pa.AttributeValueId)
+                    .OrderBy(id => id)
+                    .ToList();
+
+                var newAttributeIds = attributeValues
+                    .Select(av => av.Id)
+                    .OrderBy(id => id)
+                    .ToList();
+
+                if (existingAttributeIds.SequenceEqual(newAttributeIds))
+                {
+                    var attributeNames = string.Join(", ", attributeValues.Select(av => av.Value));
+                    throw new ArgumentException(
+                        $"A product with model ID {dto.ModelId} and attributes [{attributeNames}] already exists. " +
+                        $"Existing product ID: {existing.Id}");
+                }
+            }
+
+            // 5️⃣ Regenerate SKU
+            existingProduct.SKU = GenerateSKU(dto.ModelId, attributeValues);
+
+            // 6️⃣ Update base fields
+            existingProduct.ModelId = dto.ModelId;
+            existingProduct.Price = dto.Price;
+            existingProduct.StockQuantity = dto.StockQuantity;
+
+            // 7️⃣ Replace product attributes
+            existingProduct.ProductAttributes.Clear();
+            existingProduct.ProductAttributes = attributeValues.Select(av => new ProductAttribute
+            {
+                ProductId = existingProduct.Id,
+                AttributeValueId = av.Id
+            }).ToList();
+
+            await _productRepo.UpdateAsync(existingProduct);
+            await _productRepo.SaveChangesAsync();
+
+            // 8️⃣ Return updated DTO
+            return await GetByIdAsync(existingProduct.Id) ?? throw new Exception("Failed to load updated product");
         }
     }
 }

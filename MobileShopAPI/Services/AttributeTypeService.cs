@@ -46,5 +46,27 @@ namespace MobileShopAPI.Services
                 Name = type.Name
             };
         }
+        
+        public async Task UpdateAsync(int id, AttributeTypeUpdateDto dto)
+        {
+            var existingAttributeType = await _repo.GetByIdAsync(id);
+            if (existingAttributeType == null)
+                throw new KeyNotFoundException($"Attribute type with ID {id} not found.");
+
+            existingAttributeType.Name = dto.Name;
+
+            await _repo.UpdateAsync(existingAttributeType);
+        }
+        
+        public async Task<bool> DeleteAsync(int id)
+        {
+            var existingType = await _repo.GetByIdAsync(id);
+            if (existingType == null)
+                return false;
+
+            await _repo.DeleteAsync(existingType);
+            await _repo.SaveChangesAsync();
+            return true;
+        }
     }
 }

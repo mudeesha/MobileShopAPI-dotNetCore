@@ -46,6 +46,17 @@ namespace MobileShopAPI.Controllers
             var result = await _brandService.DeleteBrandAsync(id);
             return result ? NoContent() : NotFound();
         }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateBrand(int id, UpdateBrandDto updateBrandDto)
+        {
+            var updatedBrand = await _brandService.UpdateAsync(id, updateBrandDto);
+            
+            if (updatedBrand == null)
+                return NotFound("Brand not found");
+
+            return Ok(updatedBrand);
+        }
     }
 }
 

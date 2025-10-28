@@ -2,16 +2,21 @@
 using MobileShopAPI.Models;
 using MobileShopAPI.Repositories.Interfaces;
 using MobileShopAPI.Services.Interfaces;
+using AutoMapper;
 
 namespace MobileShopAPI.Services
 {
     public class ModelService : IModelService
     {
         private readonly IModelRepository _modelRepository;
+        private readonly IBrandRepository _brandRepository;
+        private readonly IMapper _mapper;
 
-        public ModelService(IModelRepository modelRepository)
+        public ModelService(IModelRepository modelRepository, IBrandRepository brandRepository, IMapper mapper)
         {
             _modelRepository = modelRepository;
+            _brandRepository = brandRepository;
+            _mapper = mapper;
         }
 
         public async Task<List<ModelDto>> GetAllModelsAsync()
@@ -74,6 +79,30 @@ namespace MobileShopAPI.Services
             await _modelRepository.SaveChangesAsync();
 
             return true;
+        }
+        
+        public async Task<ModelDto> UpdateAsync(int id, UpdateModelDto dto)
+        {
+            var existingModel = await _modelRepository.GetByIdAsync(id);
+            if (existingModel == null)
+                throw new KeyNotFoundException($"Model with ID {id} not found.");
+
+            var brandExists = await _brandRepository.GetByIdAsync(dto.BrandId);
+            if (brandExists == null)
+                throw new KeyNotFoundException($"Brand with ID {dto.BrandId} not found.");
+
+            existingModel.Name = dto.Name;
+            existingModel.BrandId = dto.BrandId;
+
+            await _modelRepository.UpdateAsync(existingModel);
+            
+            return new ModelDto
+            {
+                Id = existingModel.Id,
+                Name = existingModel.Name,
+                BrandId = existingModel.BrandId,
+                BrandName = brandExists.Name
+            };
         }
     }
 }

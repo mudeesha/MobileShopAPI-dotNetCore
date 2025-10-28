@@ -45,7 +45,27 @@ namespace MobileShopAPI.Controllers
             var result = await _modelService.DeleteModelAsync(id);
             return result ? NoContent() : NotFound();
         }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateModel(int id, [FromBody] UpdateModelDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
 
-        // REMOVED: GetAllModelsWithProductsAsync endpoint - method no longer exists
+            try
+            {
+                var updatedModel = await _modelService.UpdateAsync(id, dto);
+                return Ok(new
+                {
+                    message = "Model updated successfully.",
+                    data = updatedModel
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+        }
+
     }
 }

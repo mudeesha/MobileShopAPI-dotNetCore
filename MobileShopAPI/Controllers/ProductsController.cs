@@ -45,5 +45,31 @@ namespace MobileShopAPI.Controllers
             var result = await _service.DeleteAsync(id);
             return result ? NoContent() : NotFound();
         }
+        
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateProduct(int id, [FromBody] ProductUpdateDto dto)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                var updatedProduct = await _service.UpdateAsync(id, dto);
+
+                return Ok(new
+                {
+                    message = "Product updated successfully.",
+                    data = updatedProduct
+                });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+        }
     }
 }

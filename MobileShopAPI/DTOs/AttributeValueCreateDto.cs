@@ -1,8 +1,14 @@
-﻿namespace MobileShopAPI.DTOs
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MobileShopAPI.DTOs
 {
     public class AttributeValueCreateDto
     {
+        [Required]
         public int AttributeTypeId { get; set; }
-        public string Value { get; set; } = string.Empty;
+
+        [Required]
+        [MinLength(1)]
+        public List<string> Values { get; set; } = new List<string>();
     }
 }

@@ -28,5 +28,17 @@ namespace MobileShopAPI.Repositories
 
         public async Task SaveChangesAsync() =>
             await _context.SaveChangesAsync();
+        
+        public async Task<Brand?> UpdateAsync(int id, Brand brand)
+        {
+            var existingBrand = await _context.Brands.FindAsync(id);
+            if (existingBrand == null)
+                return null;
+
+            existingBrand.Name = brand.Name;
+
+            await _context.SaveChangesAsync();
+            return existingBrand;
+        }
     }
 }
