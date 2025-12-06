@@ -38,7 +38,7 @@ namespace MobileShopAPI.Controllers
         {
             var userExists = await _userManager.FindByEmailAsync(dto.Email);
             if (userExists != null)
-                return BadRequest("User already exists.");
+                return BadRequest(new { message = "User already exists." }); // Fixed: JSON object
 
             var user = new ApplicationUser
             {
@@ -48,7 +48,7 @@ namespace MobileShopAPI.Controllers
 
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest(new { errors = result.Errors }); // Fixed: JSON object
 
             await _userManager.AddToRoleAsync(user, "Customer");
 
@@ -62,24 +62,32 @@ namespace MobileShopAPI.Controllers
             });
         }
 
-
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
-                return Unauthorized("Invalid credentials");
+                return Unauthorized(new { message = "Invalid credentials" }); // Fixed: JSON object
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded)
-                return Unauthorized("Invalid credentials");
+                return Unauthorized(new { message = "Invalid credentials" }); // Fixed: JSON object
 
             var token = await GenerateJwtToken(user);
-            return Ok(new { token });
+            
+            // Get user roles for frontend
+            var roles = await _userManager.GetRolesAsync(user);
+            
+            return Ok(new { 
+                token = token,
+                role = roles.FirstOrDefault() ?? "Customer",
+                email = user.Email,
+                fullName = user.UserName // Or whatever property stores full name
+            });
         }
 
-        private async Task<string> GenerateJwtToken(ApplicationUser user){
-
+        private async Task<string> GenerateJwtToken(ApplicationUser user)
+        {
             var roles = await _userManager.GetRolesAsync(user);
 
             var claims = new List<Claim>
@@ -100,7 +108,7 @@ namespace MobileShopAPI.Controllers
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddHours(6), // or AddDays(7) based on your policy
+                expires: DateTime.UtcNow.AddHours(6),
                 signingCredentials: creds
             );
 
@@ -113,17 +121,41 @@ namespace MobileShopAPI.Controllers
         {
             var user = await _userManager.FindByIdAsync(dto.UserId);
             if (user == null)
-                return NotFound("User not found");
+                return NotFound(new { message = "User not found" }); // Fixed: JSON object
 
             if (!await _roleManager.RoleExistsAsync(dto.Role))
-                return BadRequest("Role does not exist");
+                return BadRequest(new { message = "Role does not exist" }); // Fixed: JSON object
 
             var result = await _userManager.AddToRoleAsync(user, dto.Role);
             if (!result.Succeeded)
-                return BadRequest(result.Errors);
+                return BadRequest(new { errors = result.Errors }); // Fixed: JSON object
 
-            return Ok($"User assigned to role '{dto.Role}' successfully.");
+            return Ok(new { message = $"User assigned to role '{dto.Role}' successfully." }); // Fixed: JSON object
         }
-
+        
+        [HttpPost("logout")]
+        [Authorize] // This uses Microsoft.AspNetCore.Authorization
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // Since JWT is stateless, we simply return success
+                // The token will be invalidated on the client side
+                // In future, you could add token blacklisting here if needed
+            
+                return Ok(new { 
+                    success = true,
+                    message = "Logout successful" 
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { 
+                    success = false,
+                    message = "Logout failed",
+                    error = ex.Message 
+                });
+            }
+        }
     }
 }

@@ -4,6 +4,9 @@ namespace MobileShopAPI.Services.Interfaces
 {
     public interface IProductImageService
     {
+        Task<List<ProductImageDto>> GetAllImagesAsync(int pageNumber = 1, int pageSize = 20);
+        Task<ProductImageDto?> GetImageByIdAsync(int id);
+        Task<int> GetTotalImageCountAsync();
         Task<ProductImageDto> CreateImageAsync(ProductImageCreateDto dto);
         Task<bool> UpdateImageAsync(int id, ProductImageUpdateDto dto); // ✅ ADD THIS
         Task<bool> AssignImageToProductAsync(ImageAssignmentDto dto);
