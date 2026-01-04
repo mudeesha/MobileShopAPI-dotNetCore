@@ -1,5 +1,4 @@
 ﻿using MobileShopAPI.Models;
-using MobileShopAPI.Models;
 
 namespace MobileShopAPI.Repositories.Interfaces
 {
