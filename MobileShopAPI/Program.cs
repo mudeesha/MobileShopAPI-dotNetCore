@@ -86,6 +86,14 @@ builder.Services.AddScoped<ICustomerModelService, CustomerModelService>();
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();
 
+// Register repositories (add these lines)
+builder.Services.AddScoped<ICartRepository, CartRepository>();
+builder.Services.AddScoped<IProductRepository, ProductRepository>(); // If you don't have this, create it
+
+// Register services (add these lines)
+builder.Services.AddScoped<ICartService, CartService>();
+builder.Services.AddScoped<ICustomerModelService, CustomerModelService>();
+
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
