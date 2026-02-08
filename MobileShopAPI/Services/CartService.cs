@@ -19,10 +19,11 @@ namespace MobileShopAPI.Services
         public async Task<CartDto> GetCartAsync(string userId)
         {
             var cart = await _cartRepository.GetCartByUserIdAsync(userId);
-            
+        
             if (cart == null)
             {
                 cart = await _cartRepository.CreateCartAsync(userId);
+                return new CartDto { Items = new List<CartItemDto>(), Total = 0 };
             }
 
             return MapToDto(cart);
@@ -130,26 +131,61 @@ namespace MobileShopAPI.Services
 
             return await GetCartAsync(userId);
         }
+        
+        private string? GetProductImageUrl(Product? product)
+        {
+            if (product == null || product.ProductImageAssignments == null)
+                return null;
+
+            var defaultImage = product.ProductImageAssignments
+                .FirstOrDefault(pia => pia.IsDefault)?.ProductImage?.ImageUrl;
+        
+            return defaultImage ?? product.ProductImageAssignments
+                .FirstOrDefault()?.ProductImage?.ImageUrl;
+        }
+        
+        private List<AttributeValueDto>? GetProductAttributes(Product? product)
+        {
+            if (product?.ProductAttributes == null || !product.ProductAttributes.Any())
+                return null;
+
+            return product.ProductAttributes
+                .Where(pa => pa.AttributeValue != null)
+                .Select(pa => new AttributeValueDto
+                {
+                    Id = pa.AttributeValue.Id,
+                    Type = pa.AttributeValue.AttributeType?.Name ?? "Unknown",
+                    Value = pa.AttributeValue.Value
+                }).ToList();
+        }
+        
+        private string? GetAttributeSummary(Product? product)
+        {
+            var attributes = GetProductAttributes(product);
+            if (attributes == null || !attributes.Any())
+                return null;
+
+            return string.Join(", ", attributes.Select(a => $"{a.Type}: {a.Value}"));
+        }
 
         private CartDto MapToDto(Cart cart)
         {
-            var dto = new CartDto();
-            
-            foreach (var item in cart.Items)
+            var cartDto = new CartDto
             {
-                dto.Items.Add(new CartItemDto
+                Items = cart.Items.Select(ci => new CartItemDto
                 {
-                    ProductId = item.ProductId,
-                    Quantity = item.Quantity,
-                    Price = item.Price,
-                    ProductName = item.Product?.Model?.Name ?? "Unknown Product",
-                    ImageUrl = item.Product?.ProductImageAssignments?.FirstOrDefault()?.ProductImage?.ImageUrl
-                });
-            }
+                    ProductId = ci.ProductId,
+                    Quantity = ci.Quantity,
+                    Price = ci.Price,
+                    ProductName = ci.Product?.Model?.Name ?? "Unknown Product",
+                    ImageUrl = GetProductImageUrl(ci.Product),
+                    Attributes = GetProductAttributes(ci.Product),
+                    AttributeSummary = GetAttributeSummary(ci.Product)
+                }).ToList()
+            };
 
-            dto.Total = dto.Items.Sum(i => i.Price * i.Quantity);
-            
-            return dto;
+            cartDto.Total = cartDto.Items.Sum(item => item.Price * item.Quantity);
+            return cartDto;
         }
     }
 }

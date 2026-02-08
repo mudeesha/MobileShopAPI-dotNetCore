@@ -21,9 +21,14 @@ namespace MobileShopAPI.Data
         
         public DbSet<Cart> Carts { get; set; }
         public DbSet<CartItem> CartItems { get; set; }
-        
-        // ✅ ADD THIS MISSING DbSet
         public DbSet<ProductImageAssignment> ProductImageAssignments { get; set; }
+        
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<OrderAddress> OrderAddresses { get; set; } 
+        
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<CashOnDelivery> CashOnDeliveries { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -50,16 +55,13 @@ namespace MobileShopAPI.Data
             
             modelBuilder.Entity<ProductImageAssignment>(entity =>
             {
-                // Composite primary key
                 entity.HasKey(pia => new { pia.ProductId, pia.ProductImageId });
-
-                // Relationship with Product
+                
                 entity.HasOne(pia => pia.Product)
                     .WithMany(p => p.ProductImageAssignments)
                     .HasForeignKey(pia => pia.ProductId)
                     .OnDelete(DeleteBehavior.Cascade);
-
-                // Relationship with ProductImage
+                
                 entity.HasOne(pia => pia.ProductImage)
                     .WithMany(pi => pi.ProductImageAssignments)
                     .HasForeignKey(pia => pia.ProductImageId)
@@ -76,13 +78,12 @@ namespace MobileShopAPI.Data
                 entity.HasOne(ci => ci.Product)
                     .WithMany()
                     .HasForeignKey(ci => ci.ProductId)
-                    .OnDelete(DeleteBehavior.Restrict); // Prevent deleting product if it's in a cart
+                    .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(ci => new { ci.CartId, ci.ProductId })
                     .IsUnique(); // Ensure one product per cart
             });
-
-            // Cart configuration
+            
             modelBuilder.Entity<Cart>(entity =>
             {
                 entity.HasOne(c => c.User)
@@ -93,6 +94,51 @@ namespace MobileShopAPI.Data
                 entity.HasIndex(c => c.UserId)
                     .IsUnique(); // One cart per user
             });
+            
+            // Configure enums to be stored as integers
+            modelBuilder.Entity<Order>()
+                .Property(o => o.Status)
+                .HasConversion<int>();
+                
+            modelBuilder.Entity<Order>()
+                .Property(o => o.PaymentType)
+                .HasConversion<int>();
+                
+            modelBuilder.Entity<Order>()
+                .Property(o => o.PaymentStatus)
+                .HasConversion<int>();
+
+            // Configure Order-OrderItems relationship
+            modelBuilder.Entity<Order>()
+                .HasMany(o => o.OrderItems)
+                .WithOne(oi => oi.Order)
+                .HasForeignKey(oi => oi.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure Order-OrderAddresses relationship (if using OrderAddress)
+            modelBuilder.Entity<OrderAddress>()
+                .HasOne(oa => oa.Order)
+                .WithMany() // If Order doesn't have ICollection<OrderAddress>
+                .HasForeignKey(oa => oa.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            // Configure OrderItem-Product relationship
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Product)
+                .WithMany() // Product doesn't need ICollection<OrderItem>
+                .HasForeignKey(oi => oi.ProductId);
+
+            // Configure enum for OrderAddress (if using)
+            modelBuilder.Entity<OrderAddress>()
+                .Property(oa => oa.AddressType)
+                .HasConversion<int>();
+            
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.CashOnDelivery)
+                .WithOne(cod => cod.Transaction)
+                .HasForeignKey<CashOnDelivery>(cod => cod.Id)
+                .OnDelete(DeleteBehavior.Cascade); 
+
         }
     }
 }

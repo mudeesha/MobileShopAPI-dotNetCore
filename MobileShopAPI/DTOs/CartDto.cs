@@ -7,6 +7,8 @@ namespace MobileShopAPI.DTOs
         public decimal Price { get; set; }
         public string? ProductName { get; set; }
         public string? ImageUrl { get; set; }
+        public List<AttributeValueDto>? Attributes { get; set; }
+        public string? AttributeSummary { get; set; }
     }
 
     public class CartDto

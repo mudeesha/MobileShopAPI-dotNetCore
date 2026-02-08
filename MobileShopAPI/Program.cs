@@ -79,12 +79,9 @@ builder.Services.AddScoped<IAttributeTypeService, AttributeTypeService>();
 builder.Services.AddScoped<ICustomerModelRepository, CustomerModelRepository>();
 builder.Services.AddScoped<ICustomerModelService, CustomerModelService>();
 
-// REMOVE THESE TWO LINES - ProductInventory is no longer used
-// builder.Services.AddScoped<IProductInventoryRepository, ProductInventoryRepository>();
-// builder.Services.AddScoped<IProductInventoryService, ProductInventoryService>();
-
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();
+
 
 // Register repositories (add these lines)
 builder.Services.AddScoped<ICartRepository, CartRepository>();
@@ -97,6 +94,15 @@ builder.Services.AddScoped<ICustomerModelService, CustomerModelService>();
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
+builder.Services.AddScoped<IOrderAddressRepository, OrderAddressRepository>();
+builder.Services.AddScoped<ITransactionRepository, TransactionRepository>();
+builder.Services.AddScoped<ICashOnDeliveryRepository, CashOnDeliveryRepository>();
+
+builder.Services.AddScoped<IOrderService, OrderService>();
+builder.Services.AddScoped<ITransactionService, TransactionService>();
 
 builder.Services.AddAuthentication(options =>
 {
