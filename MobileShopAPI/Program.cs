@@ -13,12 +13,12 @@ using MobileShopAPI.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// =========================
+// Add Services
+// =========================
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-//builder.Services.AddSwaggerGen();
 
 builder.Services.AddAutoMapper(typeof(AutoMapperProfile));
 
@@ -28,7 +28,7 @@ builder.Services.AddSwaggerGen(c =>
 
     c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
     {
-        Description = "JWT Authorization header using the Bearer scheme. \r\n\r\n Enter 'Bearer' [space] and then your token.\r\n\r\nExample: \"Bearer eyJhbGci...\"",
+        Description = "Enter 'Bearer' [space] and your token",
         Name = "Authorization",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
         Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
@@ -44,22 +44,26 @@ builder.Services.AddSwaggerGen(c =>
                 {
                     Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
                     Id = "Bearer"
-                },
-                Scheme = "oauth2",
-                Name = "Bearer",
-                In = Microsoft.OpenApi.Models.ParameterLocation.Header
+                }
             },
             new List<string>()
         }
     });
 });
 
+// =========================
+// Database (Aiven MySQL)
+// =========================
 
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(
         builder.Configuration.GetConnectionString("DefaultConnection"),
         ServerVersion.AutoDetect(builder.Configuration.GetConnectionString("DefaultConnection"))
     ));
+
+// =========================
+// Repositories & Services
+// =========================
 
 builder.Services.AddScoped<IBrandService, BrandService>();
 builder.Services.AddScoped<IBrandRepository, BrandRepository>();
@@ -82,18 +86,8 @@ builder.Services.AddScoped<ICustomerModelService, CustomerModelService>();
 builder.Services.AddScoped<IProductImageRepository, ProductImageRepository>();
 builder.Services.AddScoped<IProductImageService, ProductImageService>();
 
-
-// Register repositories (add these lines)
 builder.Services.AddScoped<ICartRepository, CartRepository>();
-builder.Services.AddScoped<IProductRepository, ProductRepository>(); // If you don't have this, create it
-
-// Register services (add these lines)
 builder.Services.AddScoped<ICartService, CartService>();
-builder.Services.AddScoped<ICustomerModelService, CustomerModelService>();
-
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<AppDbContext>()
-    .AddDefaultTokenProviders();
 
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
 builder.Services.AddScoped<IOrderItemRepository, OrderItemRepository>();
@@ -104,6 +98,18 @@ builder.Services.AddScoped<ICashOnDeliveryRepository, CashOnDeliveryRepository>(
 builder.Services.AddScoped<IOrderService, OrderService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
 
+// =========================
+// Identity
+// =========================
+
+builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
+    .AddEntityFrameworkStores<AppDbContext>()
+    .AddDefaultTokenProviders();
+
+// =========================
+// JWT Authentication
+// =========================
+
 builder.Services.AddAuthentication(options =>
 {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -113,6 +119,7 @@ builder.Services.AddAuthentication(options =>
 {
     options.RequireHttpsMetadata = false;
     options.SaveToken = true;
+
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuer = true,
@@ -121,34 +128,38 @@ builder.Services.AddAuthentication(options =>
         ValidateIssuerSigningKey = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidAudience = builder.Configuration["Jwt:Audience"],
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+        IssuerSigningKey = new SymmetricSecurityKey(
+            Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!)
+        )
     };
 });
 
+// =========================
+// CORS (Local + Vercel)
+// =========================
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
-        policy => policy.WithOrigins("http://localhost:3000") // your Next.js frontend
-                        .AllowAnyHeader()
-                        .AllowAnyMethod());
+        policy => policy
+            .WithOrigins(
+                "http://localhost:3000",
+                "https://maxtecmobiles.vercel.app"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod());
 });
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+// =========================
+// Middleware
+// =========================
 
-
+app.UseSwagger();
+app.UseSwaggerUI();
 
 app.UseCors("AllowFrontend");
-
-app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -157,9 +168,19 @@ SeedRoles(app);
 
 app.MapControllers();
 
+// =========================
+// Render PORT Support
+// =========================
+
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+app.Urls.Add($"http://*:{port}");
+
 app.Run();
 
-// ?? Add this method at the bottom of the file (outside `Main`)
+// =========================
+// Role Seeder
+// =========================
+
 void SeedRoles(IApplicationBuilder app)
 {
     using var scope = app.ApplicationServices.CreateScope();
