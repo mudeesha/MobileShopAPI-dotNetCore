@@ -150,12 +150,19 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod());
 });
 
+// =========================
+// ✅ FIXED: Render/MonsterASP PORT Support
+// =========================
+var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
+builder.WebHost.UseUrls($"http://*:{port}");
+
 var app = builder.Build();
 
 // =========================
 // Middleware
 // =========================
 
+// Enable Swagger in all environments (or conditionally)
 app.UseSwagger();
 app.UseSwaggerUI();
 
@@ -164,16 +171,10 @@ app.UseCors("AllowFrontend");
 app.UseAuthentication();
 app.UseAuthorization();
 
+// Seed roles before running the app
 SeedRoles(app);
 
 app.MapControllers();
-
-// =========================
-// Render PORT Support
-// =========================
-
-var port = Environment.GetEnvironmentVariable("PORT") ?? "5000";
-app.Urls.Add($"http://*:{port}");
 
 app.Run();
 
