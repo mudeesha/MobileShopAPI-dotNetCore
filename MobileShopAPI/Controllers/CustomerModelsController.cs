@@ -1,4 +1,3 @@
-// Controllers/CustomerModelsController.cs
 using Microsoft.AspNetCore.Mvc;
 using MobileShopAPI.Services.Interfaces;
 

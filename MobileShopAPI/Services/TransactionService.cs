@@ -1,4 +1,3 @@
-// Services/TransactionService.cs
 using MobileShopAPI.DTOs.Transaction;
 using MobileShopAPI.Models;
 using MobileShopAPI.Repositories.Interfaces;
@@ -29,23 +28,19 @@ namespace MobileShopAPI.Services
         {
             try
             {
-                // 1. Verify order exists and belongs to user
                 var order = await _orderRepository.GetByIdAsync(dto.OrderId);
                 if (order == null)
                     throw new KeyNotFoundException("Order not found");
 
                 if (order.UserId != userId)
                     throw new UnauthorizedAccessException("You don't have permission to create transaction for this order");
-
-                // 2. Check if transaction already exists for this order
+                
                 var existingTransactions = await _transactionRepository.GetByOrderIdAsync(dto.OrderId);
                 if (existingTransactions.Any())
                     throw new InvalidOperationException("Transaction already exists for this order");
-
-                // 3. Generate transaction number
+                
                 var transactionNumber = GenerateTransactionNumber();
-
-                // 4. Create transaction
+                
                 var transaction = new Transaction
                 {
                     TransactionNumber = transactionNumber,
@@ -58,11 +53,9 @@ namespace MobileShopAPI.Services
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
-
-                // 5. Save transaction
+                
                 await _transactionRepository.CreateAsync(transaction);
-
-                // 6. Create CashOnDelivery record if needed
+                
                 if (dto.PaymentMethod == Enums.PaymentMethod.CashOnDelivery && dto.CashOnDelivery != null)
                 {
                     var cashOnDelivery = new CashOnDelivery
@@ -81,8 +74,7 @@ namespace MobileShopAPI.Services
 
                     await _cashOnDeliveryRepository.CreateAsync(cashOnDelivery);
                 }
-
-                // 7. Return created transaction
+                
                 return await GetTransactionAsync(transaction.Id, userId);
             }
             catch (Exception ex)
@@ -98,8 +90,7 @@ namespace MobileShopAPI.Services
             var transaction = await _transactionRepository.GetByIdWithDetailsAsync(transactionId);
             if (transaction == null)
                 throw new KeyNotFoundException("Transaction not found");
-
-            // Verify user has access to this transaction
+            
             if (transaction.Order?.UserId != userId)
                 throw new UnauthorizedAccessException("You don't have permission to view this transaction");
 
@@ -124,21 +115,18 @@ namespace MobileShopAPI.Services
             var cashOnDelivery = await _cashOnDeliveryRepository.GetByTransactionIdAsync(transactionId);
             if (cashOnDelivery == null)
                 throw new InvalidOperationException("Cash on Delivery record not found");
-
-            // Update cash collection
+            
             cashOnDelivery.CollectedAmount = dto.CollectedAmount;
             cashOnDelivery.CollectedDate = dto.CollectedDate;
             cashOnDelivery.CollectedBy = dto.CollectedBy;
             cashOnDelivery.CollectorNotes = dto.CollectorNotes;
 
             await _cashOnDeliveryRepository.UpdateAsync(cashOnDelivery);
-
-            // Update transaction status
+            
             transaction.Status = Enums.TransactionStatus.Completed;
             transaction.UpdatedAt = DateTime.UtcNow;
             await _transactionRepository.UpdateAsync(transaction);
-
-            // Update order payment status
+            
             var order = await _orderRepository.GetByIdAsync(transaction.OrderId);
             if (order != null)
             {
@@ -161,8 +149,7 @@ namespace MobileShopAPI.Services
 
             return transactions.Select(MapToTransactionDto).ToList();
         }
-
-        // Helper methods
+        
         private string GenerateTransactionNumber()
         {
             var datePart = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -185,15 +172,13 @@ namespace MobileShopAPI.Services
                 CreatedAt = transaction.CreatedAt,
                 UpdatedAt = transaction.UpdatedAt
             };
-
-            // Add order info
+            
             if (transaction.Order != null)
             {
                 dto.OrderNumber = transaction.Order.OrderNumber;
                 dto.OrderTotal = transaction.Order.TotalAmount;
             }
-
-            // Add CashOnDelivery data if exists
+            
             if (transaction.CashOnDelivery != null)
             {
                 dto.CashOnDelivery = new CashOnDeliveryDto
@@ -211,7 +196,6 @@ namespace MobileShopAPI.Services
             }
             else
             {
-                // Try to load CashOnDelivery if not included
                 var cashOnDelivery = _cashOnDeliveryRepository.GetByTransactionIdAsync(transaction.Id).Result;
                 if (cashOnDelivery != null)
                 {

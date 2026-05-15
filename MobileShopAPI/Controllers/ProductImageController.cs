@@ -4,9 +4,6 @@ using MobileShopAPI.Services.Interfaces;
 
 namespace MobileShopAPI.Controllers
 {
-    /// <summary>
-    /// Controller for managing product images and their assignments to products
-    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class ProductImageController : ControllerBase
@@ -17,13 +14,7 @@ namespace MobileShopAPI.Controllers
         {
             _imageService = imageService;
         }
-
-        /// <summary>
-        /// Get all product images with pagination
-        /// </summary>
-        /// <param name="pageNumber">Page number (default: 1)</param>
-        /// <param name="pageSize">Number of items per page (default: 20, max: 100)</param>
-        /// <returns>Paginated list of product images</returns>
+        
         [HttpGet]
         public async Task<IActionResult> GetAllImages(
             [FromQuery] int pageNumber = 1,
@@ -47,12 +38,7 @@ namespace MobileShopAPI.Controllers
                 }
             });
         }
-
-        /// <summary>
-        /// Get a specific product image by ID
-        /// </summary>
-        /// <param name="id">Product image ID</param>
-        /// <returns>Product image details</returns>
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetImageById(int id)
         {
@@ -61,36 +47,21 @@ namespace MobileShopAPI.Controllers
             
             return Ok(image);
         }
-
-        /// <summary>
-        /// Get all images assigned to a specific product
-        /// </summary>
-        /// <param name="productId">Product ID</param>
-        /// <returns>List of images for the product</returns>
+        
         [HttpGet("product/{productId}")]
         public async Task<IActionResult> GetImagesByProduct(int productId)
         {
             var images = await _imageService.GetImagesByProductAsync(productId);
             return Ok(images);
         }
-
-        /// <summary>
-        /// Get all products that use a specific image
-        /// </summary>
-        /// <param name="imageId">Product image ID</param>
-        /// <returns>List of products using the image</returns>
+        
         [HttpGet("{imageId}/products")]
         public async Task<IActionResult> GetProductsByImage(int imageId)
         {
             var products = await _imageService.GetProductsByImageAsync(imageId);
             return Ok(products);
         }
-
-        /// <summary>
-        /// Create a new product image and optionally assign it to products
-        /// </summary>
-        /// <param name="dto">Product image creation data</param>
-        /// <returns>Created product image</returns>
+        
         [HttpPost]
         public async Task<IActionResult> AddImage([FromBody] ProductImageCreateDto dto)
         {
@@ -112,13 +83,7 @@ namespace MobileShopAPI.Controllers
 
             return Ok(image);
         }
-
-        /// <summary>
-        /// Update an existing product image and its assignments
-        /// </summary>
-        /// <param name="id">Product image ID</param>
-        /// <param name="dto">Product image update data</param>
-        /// <returns>Success message</returns>
+        
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateImage(int id, [FromBody] ProductImageUpdateDto dto)
         {
@@ -149,12 +114,7 @@ namespace MobileShopAPI.Controllers
 
             return Ok(new { message = "Image updated successfully" });
         }
-
-        /// <summary>
-        /// Delete a product image
-        /// </summary>
-        /// <param name="id">Product image ID</param>
-        /// <returns>Success message</returns>
+        
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteImage(int id)
         {
@@ -164,11 +124,7 @@ namespace MobileShopAPI.Controllers
             return Ok(new { message = "Image deleted successfully" });
         }
 
-        /// <summary>
-        /// Assign an existing image to a product
-        /// </summary>
-        /// <param name="dto">Image assignment data</param>
-        /// <returns>Success message</returns>
+
         [HttpPost("assign")]
         public async Task<IActionResult> AssignImageToProduct([FromBody] ImageAssignmentDto dto)
         {
@@ -177,26 +133,14 @@ namespace MobileShopAPI.Controllers
             
             return Ok(new { message = "Image assigned to product successfully" });
         }
-
-        /// <summary>
-        /// Remove an image assignment from a product
-        /// </summary>
-        /// <param name="productId">Product ID</param>
-        /// <param name="productImageId">Product image ID</param>
-        /// <returns>Success message</returns>
+        
         [HttpDelete("unassign/{productId}/{productImageId}")]
         public async Task<IActionResult> RemoveImageFromProduct(int productId, int productImageId)
         {
             await _imageService.RemoveImageFromProductAsync(productId, productImageId);
             return Ok(new { message = "Image removed from product successfully" });
         }
-
-        /// <summary>
-        /// Set a specific image as default for a product
-        /// </summary>
-        /// <param name="productId">Product ID</param>
-        /// <param name="productImageId">Product image ID to set as default</param>
-        /// <returns>Success message</returns>
+        
         [HttpPut("set-default/{productId}/{productImageId}")]
         public async Task<IActionResult> SetDefaultImage(int productId, int productImageId)
         {

@@ -1,4 +1,3 @@
-// Services/OrderService.cs
 using MobileShopAPI.DTOs.Order;
 using MobileShopAPI.Models;
 using MobileShopAPI.Repositories.Interfaces;
@@ -68,18 +67,15 @@ namespace MobileShopAPI.Services
                     OrderDate = DateTime.UtcNow,
                     Status = Enums.OrderStatus.Pending,
                     
-                    // Amounts
                     Subtotal = subtotal,
                     TaxAmount = taxAmount,
                     ShippingAmount = shippingAmount,
                     DiscountAmount = 0m,
                     TotalAmount = totalAmount,
                     
-                    // Payment
-                    PaymentType = dto.PaymentMethod, // Note: Your model uses PaymentType
+                    PaymentType = dto.PaymentMethod,
                     PaymentStatus = Enums.PaymentStatus.Pending,
                     
-                    // Notes
                     CustomerNotes = dto.CustomerNotes,
                     
                     CreatedAt = DateTime.UtcNow,
@@ -144,23 +140,15 @@ namespace MobileShopAPI.Services
 
         public async Task<List<OrderDto>> GetUserOrdersAsync(string userId)
         {
-            // Get all orders for the user
             var orders = await _orderRepository.GetByUserIdAsync(userId);
-    
-            // Get all order IDs
             var orderIds = orders.Select(o => o.Id).ToList();
-    
-            // Get all order items for these orders in one query
             var allOrderItems = await _orderItemRepository.GetByOrderIdsAsync(orderIds);
-    
-            // Get all addresses for these orders
             var allAddresses = await _orderAddressRepository.GetByOrderIdsAsync(orderIds);
             
             var orderDtos = new List<OrderDto>();
     
             foreach (var order in orders)
             {
-                // Get items for this specific order
                 var orderItems = allOrderItems.Where(oi => oi.OrderId == order.Id).ToList();
                 var addresses = allAddresses.Where(a => a.OrderId == order.Id).ToList();
         
@@ -194,8 +182,7 @@ namespace MobileShopAPI.Services
             order.AdminNotes = dto.AdminNotes;
             order.TrackingNumber = dto.TrackingNumber;
             order.UpdatedAt = DateTime.UtcNow;
-
-            // Update dates based on status
+            
             if (dto.Status == Enums.OrderStatus.Shipped)
                 order.ShippedDate = DateTime.UtcNow;
             else if (dto.Status == Enums.OrderStatus.Delivered)
@@ -255,7 +242,7 @@ namespace MobileShopAPI.Services
                 OrderDate = o.OrderDate,
                 Status = o.Status,
                 TotalAmount = o.TotalAmount,
-                ItemCount = 0, // We'll fix this later
+                ItemCount = 0,
                 PaymentStatus = o.PaymentStatus
             }).ToList();
         }
@@ -269,8 +256,7 @@ namespace MobileShopAPI.Services
             var orderItems = await _orderItemRepository.GetByOrderIdAsync(orderId);
             return MapToOrderDto(order, orderItems);
         }
-
-        // Helper methods
+        
         private string GenerateOrderNumber()
         {
             var datePart = DateTime.UtcNow.ToString("yyyyMMdd");
@@ -290,81 +276,80 @@ namespace MobileShopAPI.Services
         }
 
         private OrderDto MapToOrderDto(Order order, IEnumerable<OrderItem> orderItems, IEnumerable<OrderAddress> addresses = null)
-{
-    // Get shipping and billing addresses from the provided addresses
-    var shippingAddress = addresses?.FirstOrDefault(a => a.AddressType == Enums.AddressType.Shipping);
-    var billingAddress = addresses?.FirstOrDefault(a => a.AddressType == Enums.AddressType.Billing);
-
-    var orderItemDtos = orderItems.Select(oi => new OrderItemDto
-    {
-        Id = oi.Id,
-        ProductId = oi.ProductId,
-        Quantity = oi.Quantity,
-        UnitPrice = oi.PriceAtPurchase,
-        TotalPrice = oi.Quantity * oi.PriceAtPurchase,
-        
-        ProductName = oi.Product?.Model?.Name ?? "Unknown Product",
-        SKU = oi.Product?.SKU ?? "N/A",
-        AttributeSummary = GetAttributeSummary(oi.Product?.ProductAttributes),
-        ProductImage = oi.Product?.ProductImageAssignments?
-            .FirstOrDefault()?.ProductImage?.ImageUrl
-    }).ToList();
-
-    return new OrderDto
-    {
-        Id = order.Id,
-        OrderNumber = order.OrderNumber,
-        UserId = order.UserId,
-        OrderDate = order.OrderDate,
-        Status = order.Status,
-        
-        Subtotal = order.Subtotal,
-        TaxAmount = order.TaxAmount,
-        ShippingFee = order.ShippingAmount,
-        DiscountAmount = order.DiscountAmount,
-        TotalAmount = order.TotalAmount,
-        
-        PaymentMethod = order.PaymentType,
-        PaymentStatus = order.PaymentStatus,
-        
-        ShippingAddress = shippingAddress != null ? new AddressDto
         {
-            FullName = shippingAddress.FullName,
-            AddressLine1 = shippingAddress.AddressLine1,
-            AddressLine2 = shippingAddress.AddressLine2,
-            City = shippingAddress.City,
-            State = shippingAddress.State,
-            ZipCode = shippingAddress.ZipCode,
-            Country = shippingAddress.Country,
-            Phone = shippingAddress.Phone,
-            Email = shippingAddress.Email
-        } : null,
-        
-        BillingAddress = billingAddress != null ? new AddressDto
-        {
-            FullName = billingAddress.FullName,
-            AddressLine1 = billingAddress.AddressLine1,
-            AddressLine2 = billingAddress.AddressLine2,
-            City = billingAddress.City,
-            State = billingAddress.State,
-            ZipCode = billingAddress.ZipCode,
-            Country = billingAddress.Country,
-            Phone = billingAddress.Phone,
-            Email = billingAddress.Email
-        } : null,
-        
-        OrderItems = orderItemDtos,
-        
-        TrackingNumber = order.TrackingNumber,
-        ShippedDate = order.ShippedDate,
-        DeliveredDate = order.DeliveredDate,
-        
-        CustomerNotes = order.CustomerNotes,
-        AdminNotes = order.AdminNotes,
-        
-        CreatedAt = order.CreatedAt,
-        UpdatedAt = order.UpdatedAt
-    };
-}
+            var shippingAddress = addresses?.FirstOrDefault(a => a.AddressType == Enums.AddressType.Shipping);
+            var billingAddress = addresses?.FirstOrDefault(a => a.AddressType == Enums.AddressType.Billing);
+
+            var orderItemDtos = orderItems.Select(oi => new OrderItemDto
+            {
+                Id = oi.Id,
+                ProductId = oi.ProductId,
+                Quantity = oi.Quantity,
+                UnitPrice = oi.PriceAtPurchase,
+                TotalPrice = oi.Quantity * oi.PriceAtPurchase,
+                
+                ProductName = oi.Product?.Model?.Name ?? "Unknown Product",
+                SKU = oi.Product?.SKU ?? "N/A",
+                AttributeSummary = GetAttributeSummary(oi.Product?.ProductAttributes),
+                ProductImage = oi.Product?.ProductImageAssignments?
+                    .FirstOrDefault()?.ProductImage?.ImageUrl
+            }).ToList();
+
+            return new OrderDto
+            {
+                Id = order.Id,
+                OrderNumber = order.OrderNumber,
+                UserId = order.UserId,
+                OrderDate = order.OrderDate,
+                Status = order.Status,
+                
+                Subtotal = order.Subtotal,
+                TaxAmount = order.TaxAmount,
+                ShippingFee = order.ShippingAmount,
+                DiscountAmount = order.DiscountAmount,
+                TotalAmount = order.TotalAmount,
+                
+                PaymentMethod = order.PaymentType,
+                PaymentStatus = order.PaymentStatus,
+                
+                ShippingAddress = shippingAddress != null ? new AddressDto
+                {
+                    FullName = shippingAddress.FullName,
+                    AddressLine1 = shippingAddress.AddressLine1,
+                    AddressLine2 = shippingAddress.AddressLine2,
+                    City = shippingAddress.City,
+                    State = shippingAddress.State,
+                    ZipCode = shippingAddress.ZipCode,
+                    Country = shippingAddress.Country,
+                    Phone = shippingAddress.Phone,
+                    Email = shippingAddress.Email
+                } : null,
+                
+                BillingAddress = billingAddress != null ? new AddressDto
+                {
+                    FullName = billingAddress.FullName,
+                    AddressLine1 = billingAddress.AddressLine1,
+                    AddressLine2 = billingAddress.AddressLine2,
+                    City = billingAddress.City,
+                    State = billingAddress.State,
+                    ZipCode = billingAddress.ZipCode,
+                    Country = billingAddress.Country,
+                    Phone = billingAddress.Phone,
+                    Email = billingAddress.Email
+                } : null,
+                
+                OrderItems = orderItemDtos,
+                
+                TrackingNumber = order.TrackingNumber,
+                ShippedDate = order.ShippedDate,
+                DeliveredDate = order.DeliveredDate,
+                
+                CustomerNotes = order.CustomerNotes,
+                AdminNotes = order.AdminNotes,
+                
+                CreatedAt = order.CreatedAt,
+                UpdatedAt = order.UpdatedAt
+            };
+        }
     }
 }

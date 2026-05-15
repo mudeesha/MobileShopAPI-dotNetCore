@@ -37,7 +37,7 @@ namespace MobileShopAPI.Controllers
                 var transaction = await _transactionService.CreateTransactionAsync(dto, userId);
                 return Ok(transaction);
             }
-            catch (KeyNotFoundException ex)
+            catch (KeyNotFoundException ex) 
             {
                 return NotFound(new { error = ex.Message });
             }

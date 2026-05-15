@@ -14,11 +14,9 @@ public class TransactionDto
     public string Currency { get; set; } = "LKR";
         
     public string? Notes { get; set; }
-        
-    // Payment type specific data
+    
     public CashOnDeliveryDto? CashOnDelivery { get; set; }
-        
-    // Order info (optional)
+    
     public string? OrderNumber { get; set; }
     public decimal? OrderTotal { get; set; }
         

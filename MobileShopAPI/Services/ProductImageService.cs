@@ -13,9 +13,7 @@ namespace MobileShopAPI.Services
         {
             _imageRepo = imageRepo;
         }
-
-        // ✅ Add these missing methods for GET endpoints:
-
+        
         public async Task<List<ProductImageDto>> GetAllImagesAsync(int pageNumber = 1, int pageSize = 20)
         {
             var images = await _imageRepo.GetAllAsync(pageNumber, pageSize);
@@ -24,7 +22,6 @@ namespace MobileShopAPI.Services
             {
                 Id = img.Id,
                 ImageUrl = img.ImageUrl,
-                // Add other properties if needed
             }).ToList();
         }
 
@@ -37,17 +34,14 @@ namespace MobileShopAPI.Services
             {
                 Id = image.Id,
                 ImageUrl = image.ImageUrl,
-                // Add other properties if needed
             };
         }
-
-        // ✅ GET: Get total count for pagination
+        
         public async Task<int> GetTotalImageCountAsync()
         {
             return await _imageRepo.GetTotalCountAsync();
         }
-
-        // Your existing methods...
+        
         public async Task<ProductImageDto> CreateImageAsync(ProductImageCreateDto dto)
         {
             var productImage = new ProductImage

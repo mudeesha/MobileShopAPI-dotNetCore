@@ -1,4 +1,3 @@
-// Services/Interfaces/ICustomerModelService.cs
 using MobileShopAPI.DTOs;
 
 namespace MobileShopAPI.Services.Interfaces

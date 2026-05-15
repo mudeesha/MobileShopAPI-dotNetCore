@@ -44,8 +44,7 @@ namespace MobileShopAPI.Services
                 BrandName = model.Brand?.Name ?? ""
             };
         }
-
-        // ✅ Uses ModelCreateDto for input (create operation)
+        
         public async Task<ModelDto> CreateModelAsync(ModelCreateDto modelDto)
         {
             var model = new Model
@@ -56,11 +55,8 @@ namespace MobileShopAPI.Services
 
             await _modelRepository.AddAsync(model);
             await _modelRepository.SaveChangesAsync();
-
-            // Load the model with brand information for response
             var modelWithBrand = await _modelRepository.GetByIdAsync(model.Id);
             
-            // ✅ Returns ModelDto for output (with BrandName)
             return new ModelDto
             {
                 Id = model.Id,

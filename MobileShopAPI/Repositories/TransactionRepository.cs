@@ -1,4 +1,3 @@
-// Repositories/TransactionRepository.cs
 using Microsoft.EntityFrameworkCore;
 using MobileShopAPI.Data;
 using MobileShopAPI.Models;

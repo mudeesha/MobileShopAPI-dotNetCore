@@ -22,7 +22,6 @@ namespace MobileShopAPI.Repositories
                 .Include(p => p.ProductAttributes)
                 .ThenInclude(pa => pa.AttributeValue)
                 .ThenInclude(av => av.AttributeType)
-                // ✅ UPDATE: Use ProductImageAssignments instead of direct ProductImages
                 .Include(p => p.ProductImageAssignments)
                 .ThenInclude(pia => pia.ProductImage)
                 .FirstOrDefaultAsync(p => p.Id == id);
@@ -35,7 +34,6 @@ namespace MobileShopAPI.Repositories
                 .ThenInclude(m => m.Brand)
                 .Include(p => p.ProductAttributes)
                 .ThenInclude(pa => pa.AttributeValue)
-                // ✅ UPDATE: Use ProductImageAssignments
                 .Include(p => p.ProductImageAssignments)
                 .ThenInclude(pia => pia.ProductImage)
                 .ToListAsync();
@@ -49,7 +47,6 @@ namespace MobileShopAPI.Repositories
                 .Include(p => p.ProductAttributes)
                 .ThenInclude(pa => pa.AttributeValue)
                 .ThenInclude(av => av.AttributeType)
-                // ✅ UPDATE: Use ProductImageAssignments
                 .Include(p => p.ProductImageAssignments)
                 .ThenInclude(pia => pia.ProductImage)
                 .AsQueryable();

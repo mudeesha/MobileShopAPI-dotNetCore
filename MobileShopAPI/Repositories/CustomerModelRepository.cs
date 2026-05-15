@@ -1,4 +1,3 @@
-// Repositories/CustomerModelRepository.cs
 using Microsoft.EntityFrameworkCore;
 using MobileShopAPI.Data;
 using MobileShopAPI.Models;
@@ -34,10 +33,7 @@ namespace MobileShopAPI.Repositories
 
         public async Task<Product?> GetProductByAttributeValueIdsAsync(int modelId, List<int> attributeValueIds)
         {
-            // Get count of attribute values needed
             var attributeCount = attributeValueIds.Count;
-            
-            // Query optimization: Get all products for model and filter in memory
             var products = await _context.Products
                 .AsNoTracking()
                 .Include(p => p.ProductImageAssignments)
@@ -47,20 +43,17 @@ namespace MobileShopAPI.Repositories
                         .ThenInclude(av => av.AttributeType)
                 .Where(p => p.ModelId == modelId && p.StockQuantity > 0)
                 .ToListAsync();
-
-            // Find product that matches exactly the attribute value IDs
+            
             foreach (var product in products)
             {
                 if (product.ProductAttributes == null) 
                     continue;
                 
-                // Get product's attribute value IDs
                 var productAttrValueIds = product.ProductAttributes
                     .Where(pa => pa.AttributeValue != null)
                     .Select(pa => pa.AttributeValue!.Id)
                     .ToList();
                 
-                // Check for exact match
                 if (productAttrValueIds.Count == attributeCount &&
                     attributeValueIds.All(id => productAttrValueIds.Contains(id)))
                 {
@@ -70,14 +63,11 @@ namespace MobileShopAPI.Repositories
             
             return null;
         }
-
-        // Optional: Add a more optimized query using raw SQL for better performance
+        
         public async Task<Product?> GetProductByAttributeValueIdsOptimizedAsync(int modelId, List<int> attributeValueIds)
         {
             var attributeCount = attributeValueIds.Count;
             var idsString = string.Join(",", attributeValueIds);
-            
-            // Using raw SQL for better performance with complex filtering
             var query = @"
                 SELECT p.*
                 FROM Products p

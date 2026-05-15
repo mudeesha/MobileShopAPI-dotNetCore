@@ -22,13 +22,12 @@ namespace MobileShopAPI.Controllers
 
         private string GetUserId()
         {
-            // Get ALL NameIdentifier claims
             var nameIdentifierClaims = User.Claims
                 .Where(c => c.Type == ClaimTypes.NameIdentifier)
                 .ToList();
     
             // Log for debugging
-            _logger.LogInformation("Found {Count} NameIdentifier claims", nameIdentifierClaims.Count);
+            // _logger.LogInformation("Found {Count} NameIdentifier claims", nameIdentifierClaims.Count);
     
             foreach (var claim in nameIdentifierClaims)
             {

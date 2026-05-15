@@ -1,4 +1,3 @@
-// Services/CustomerModelService.cs
 using MobileShopAPI.DTOs;
 using MobileShopAPI.Models;
 using MobileShopAPI.Repositories.Interfaces;
@@ -72,7 +71,6 @@ namespace MobileShopAPI.Services
         public async Task<ProductVariantDto?> GetProductByAttributeValueIdsAsync(
             int modelId, List<int> attributeValueIds)
         {
-            // Simple validation
             if (attributeValueIds == null || !attributeValueIds.Any())
                 throw new ArgumentException("At least one attribute value ID is required");
 

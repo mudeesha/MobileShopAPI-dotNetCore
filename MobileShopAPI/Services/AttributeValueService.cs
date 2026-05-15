@@ -40,12 +40,10 @@ namespace MobileShopAPI.Services
 
         public async Task<List<AttributeValueDto>> CreateBulkAsync(AttributeValueCreateDto dto)
         {
-            // 1️⃣ Check if attribute type exists
             var type = await _typeRepo.GetByIdAsync(dto.AttributeTypeId);
             if (type == null)
                 throw new Exception($"Attribute type with ID {dto.AttributeTypeId} not found.");
-
-            // 2️⃣ Remove duplicate values in request itself
+            
             var distinctValues = dto.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             if (!distinctValues.Any())
                 throw new Exception("No valid attribute values provided.");
@@ -54,7 +52,6 @@ namespace MobileShopAPI.Services
 
             foreach (var value in distinctValues)
             {
-                // 3️⃣ Check for existing value in DB
                 var existingValue = await _repo.GetByTypeAndValueAsync(dto.AttributeTypeId, value);
                 if (existingValue != null)
                     continue; // Skip duplicate
@@ -85,28 +82,23 @@ namespace MobileShopAPI.Services
         
         public async Task<List<AttributeValueDto>> UpdateAsync(AttributeValueUpdateDto dto)
         {
-            // 1️⃣ Validate attribute type exists
             var type = await _typeRepo.GetByIdAsync(dto.AttributeTypeId);
             if (type == null)
                 throw new Exception($"Attribute type with ID {dto.AttributeTypeId} not found.");
-
-            // 2️⃣ Remove duplicates in request
+            
             var distinctValues = dto.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
             if (!distinctValues.Any())
                 throw new Exception("No valid attribute values provided.");
-
-            // 3️⃣ Load existing values from DB
+            
             var existingValues = (await _repo.GetByAttributeTypeIdAsync(dto.AttributeTypeId)).ToList();
             var existingValueStrings = existingValues.Select(ev => ev.Value).ToHashSet(StringComparer.OrdinalIgnoreCase);
-
-            // 4️⃣ Determine values to delete
+            
             var toDelete = existingValues.Where(ev => !distinctValues.Contains(ev.Value, StringComparer.OrdinalIgnoreCase)).ToList();
             foreach (var ev in toDelete)
             {
                 await _repo.DeleteAsync(ev);
             }
-
-            // 5️⃣ Determine values to add
+            
             var toAdd = distinctValues.Where(v => !existingValueStrings.Contains(v, StringComparer.OrdinalIgnoreCase)).ToList();
             var addedValues = new List<AttributeValueDto>();
 
@@ -126,11 +118,9 @@ namespace MobileShopAPI.Services
                     Value = av.Value
                 });
             }
-
-            // 6️⃣ Save changes
+            
             await _repo.SaveChangesAsync();
-
-            // 7️⃣ Return **current full state of attribute values**
+            
             var finalValues = (await _repo.GetByAttributeTypeIdAsync(dto.AttributeTypeId))
                 .Select(av => new AttributeValueDto
                 {
@@ -148,17 +138,14 @@ namespace MobileShopAPI.Services
 
         public async Task<(AttributeTypeDto Type, List<AttributeValueDto> Values)> CreateTypeWithValuesAsync(AttributeTypeWithValuesCreateDto dto)
         {
-            // 1. Check if attribute type exists by name (case-insensitive)
             var existingType = await _typeRepo.GetByNameAsync(dto.Type);
 
             if (existingType == null)
             {
-                // 2. Type doesn't exist — create new type and all values
                 var newType = new AttributeType { Name = dto.Type };
                 await _typeRepo.AddAsync(newType);
                 await _typeRepo.SaveChangesAsync();
-
-                // Remove duplicates from input values
+                
                 var distinctValues = dto.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
 
                 var newValues = distinctValues.Select(v => new AttributeValue
@@ -182,11 +169,8 @@ namespace MobileShopAPI.Services
             }
             else
             {
-                // 3. Type exists — get existing values for this type
                 var existingValues = await _repo.GetByAttributeTypeIdAsync(existingType.Id);
                 var existingValueSet = existingValues.Select(v => v.Value.ToLower()).ToHashSet();
-
-                // 4. Filter input values: only keep those not already existing
                 var distinctInputValues = dto.Values.Distinct(StringComparer.OrdinalIgnoreCase).ToList();
                 var newValuesToAdd = distinctInputValues
                     .Where(v => !existingValueSet.Contains(v.ToLower()))
@@ -194,22 +178,9 @@ namespace MobileShopAPI.Services
 
                 if (newValuesToAdd.Count == 0)
                 {
-                    // All values already exist — nothing to add, optionally throw or just return existing
-                    // throw new Exception($"Attribute type '{existingType.Name}' already has all these values.");
-                    // Or just return existing values:
-                    //var typeDto = new AttributeTypeDto { Id = existingType.Id, Name = existingType.Name };
-                    //var valueDtos = existingValues.Select(v => new AttributeValueDto
-                    //{
-                    //    Id = v.Id,
-                    //    Type = existingType.Name,
-                    //    Value = v.Value
-                    //}).ToList();
-
-                    //return (typeDto, valueDtos);
                     throw new Exception("All attribute values already exist for this type. No new values added.");
                 }
-
-                // 5. Add only new values
+                
                 var newAttributeValues = newValuesToAdd.Select(v => new AttributeValue
                 {
                     AttributeTypeId = existingType.Id,
@@ -218,8 +189,6 @@ namespace MobileShopAPI.Services
 
                 await _repo.AddRangeAsync(newAttributeValues);
                 await _repo.SaveChangesAsync();
-
-                // 6. Return the updated full list of values (existing + new)
                 var updatedValues = existingValues.Concat(newAttributeValues).ToList();
 
                 var updatedValueDtos = updatedValues.Select(v => new AttributeValueDto

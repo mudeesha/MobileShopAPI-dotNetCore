@@ -81,7 +81,7 @@ namespace MobileShopAPI.Data
                     .OnDelete(DeleteBehavior.Restrict);
 
                 entity.HasIndex(ci => new { ci.CartId, ci.ProductId })
-                    .IsUnique(); // Ensure one product per cart
+                    .IsUnique();
             });
             
             modelBuilder.Entity<Cart>(entity =>
@@ -92,10 +92,9 @@ namespace MobileShopAPI.Data
                     .OnDelete(DeleteBehavior.Cascade);
 
                 entity.HasIndex(c => c.UserId)
-                    .IsUnique(); // One cart per user
+                    .IsUnique();
             });
             
-            // Configure enums to be stored as integers
             modelBuilder.Entity<Order>()
                 .Property(o => o.Status)
                 .HasConversion<int>();
@@ -107,28 +106,24 @@ namespace MobileShopAPI.Data
             modelBuilder.Entity<Order>()
                 .Property(o => o.PaymentStatus)
                 .HasConversion<int>();
-
-            // Configure Order-OrderItems relationship
+            
             modelBuilder.Entity<Order>()
                 .HasMany(o => o.OrderItems)
                 .WithOne(oi => oi.Order)
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure Order-OrderAddresses relationship (if using OrderAddress)
+            
             modelBuilder.Entity<OrderAddress>()
                 .HasOne(oa => oa.Order)
-                .WithMany() // If Order doesn't have ICollection<OrderAddress>
+                .WithMany()
                 .HasForeignKey(oa => oa.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
-
-            // Configure OrderItem-Product relationship
+            
             modelBuilder.Entity<OrderItem>()
                 .HasOne(oi => oi.Product)
-                .WithMany() // Product doesn't need ICollection<OrderItem>
+                .WithMany()
                 .HasForeignKey(oi => oi.ProductId);
-
-            // Configure enum for OrderAddress (if using)
+            
             modelBuilder.Entity<OrderAddress>()
                 .Property(oa => oa.AddressType)
                 .HasConversion<int>();

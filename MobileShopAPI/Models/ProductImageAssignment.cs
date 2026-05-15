@@ -8,7 +8,6 @@ namespace MobileShopAPI.Models
         public int ProductImageId { get; set; }
         public bool IsDefault { get; set; }
         
-        // Navigation properties
         [ForeignKey("ProductId")]
         public virtual Product? Product { get; set; }
 

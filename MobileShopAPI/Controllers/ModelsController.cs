@@ -32,7 +32,7 @@ namespace MobileShopAPI.Controllers
 
         [HttpPost]
         //[Authorize(Roles = "Admin")]
-        public async Task<ActionResult<ModelDto>> Create(ModelCreateDto dto) // Change parameter type
+        public async Task<ActionResult<ModelDto>> Create(ModelCreateDto dto)
         {
             var created = await _modelService.CreateModelAsync(dto);
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);

@@ -38,7 +38,7 @@ namespace MobileShopAPI.Controllers
         {
             var userExists = await _userManager.FindByEmailAsync(dto.Email);
             if (userExists != null)
-                return BadRequest(new { message = "User already exists." }); // Fixed: JSON object
+                return BadRequest(new { message = "User already exists." });
 
             var user = new ApplicationUser
             {
@@ -48,13 +48,12 @@ namespace MobileShopAPI.Controllers
 
             var result = await _userManager.CreateAsync(user, dto.Password);
             if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors }); // Fixed: JSON object
+                return BadRequest(new { errors = result.Errors });
 
             await _userManager.AddToRoleAsync(user, "Customer");
 
             var token = await GenerateJwtToken(user);
-
-            // Return both message and token
+            
             return Ok(new
             {
                 message = "User registered successfully",
@@ -67,22 +66,21 @@ namespace MobileShopAPI.Controllers
         {
             var user = await _userManager.FindByEmailAsync(dto.Email);
             if (user == null)
-                return Unauthorized(new { message = "Invalid credentials" }); // Fixed: JSON object
+                return Unauthorized(new { message = "Invalid credentials" });
 
             var result = await _signInManager.CheckPasswordSignInAsync(user, dto.Password, false);
             if (!result.Succeeded)
-                return Unauthorized(new { message = "Invalid credentials" }); // Fixed: JSON object
+                return Unauthorized(new { message = "Invalid credentials" });
 
             var token = await GenerateJwtToken(user);
             
-            // Get user roles for frontend
             var roles = await _userManager.GetRolesAsync(user);
             
             return Ok(new { 
                 token = token,
                 role = roles.FirstOrDefault() ?? "Customer",
                 email = user.Email,
-                fullName = user.UserName // Or whatever property stores full name
+                fullName = user.UserName
             });
         }
 
@@ -120,28 +118,24 @@ namespace MobileShopAPI.Controllers
         {
             var user = await _userManager.FindByIdAsync(dto.UserId);
             if (user == null)
-                return NotFound(new { message = "User not found" }); // Fixed: JSON object
+                return NotFound(new { message = "User not found" });
 
             if (!await _roleManager.RoleExistsAsync(dto.Role))
-                return BadRequest(new { message = "Role does not exist" }); // Fixed: JSON object
+                return BadRequest(new { message = "Role does not exist" });
 
             var result = await _userManager.AddToRoleAsync(user, dto.Role);
             if (!result.Succeeded)
-                return BadRequest(new { errors = result.Errors }); // Fixed: JSON object
+                return BadRequest(new { errors = result.Errors });
 
-            return Ok(new { message = $"User assigned to role '{dto.Role}' successfully." }); // Fixed: JSON object
+            return Ok(new { message = $"User assigned to role '{dto.Role}' successfully." });
         }
         
         [HttpPost("logout")]
-        [Authorize] // This uses Microsoft.AspNetCore.Authorization
+        [Authorize]
         public async Task<IActionResult> Logout()
         {
             try
             {
-                // Since JWT is stateless, we simply return success
-                // The token will be invalidated on the client side
-                // In future, you could add token blacklisting here if needed
-            
                 return Ok(new { 
                     success = true,
                     message = "Logout successful" 

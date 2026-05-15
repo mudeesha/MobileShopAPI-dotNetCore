@@ -16,7 +16,6 @@ public class CreateTransactionDto
         
     [MaxLength(500)]
     public string? Notes { get; set; }
-        
-    // Cash on Delivery specific
+    
     public CreateCashOnDeliveryDto? CashOnDelivery { get; set; }
 }

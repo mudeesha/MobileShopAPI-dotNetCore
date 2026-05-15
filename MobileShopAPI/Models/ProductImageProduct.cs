@@ -6,7 +6,6 @@ namespace MobileShopAPI.Models
     {
         public int ProductImageId { get; set; }
         public ProductImage ProductImage { get; set; }
-
         public int ProductId { get; set; }
         public Product Product { get; set; }
 

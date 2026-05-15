@@ -31,47 +31,41 @@ namespace MobileShopAPI.Services
 
         public async Task<CartDto> AddToCartAsync(string userId, AddToCartDto dto)
         {
-            // Get or create cart
             var cart = await _cartRepository.GetCartByUserIdAsync(userId);
             if (cart == null)
             {
                 cart = await _cartRepository.CreateCartAsync(userId);
             }
-
-            // Get product
+            
             var product = await _productRepository.GetByIdAsync(dto.ProductId);
             if (product == null)
                 throw new KeyNotFoundException($"Product with ID {dto.ProductId} not found");
 
             if (product.StockQuantity < dto.Quantity)
                 throw new InvalidOperationException($"Not enough stock. Available: {product.StockQuantity}");
-
-            // Check if item already exists in cart
+            
             var existingItem = await _cartRepository.GetCartItemAsync(cart.Id, dto.ProductId);
             
             if (existingItem != null)
             {
-                // Update quantity
                 existingItem.Quantity += dto.Quantity;
                 existingItem.UpdatedAt = DateTime.UtcNow;
                 await _cartRepository.UpdateCartItemAsync(existingItem);
             }
             else
             {
-                // Add new item
                 var cartItem = new CartItem
                 {
                     CartId = cart.Id,
                     ProductId = dto.ProductId,
                     Quantity = dto.Quantity,
-                    Price = product.Price // Snapshot current price
+                    Price = product.Price
                 };
                 await _cartRepository.AddCartItemAsync(cartItem);
             }
 
             await _cartRepository.SaveChangesAsync();
             
-            // Return updated cart
             return await GetCartAsync(userId);
         }
 
@@ -89,8 +83,7 @@ namespace MobileShopAPI.Services
             {
                 return await RemoveFromCartAsync(userId, productId);
             }
-
-            // Check stock
+            
             var product = await _productRepository.GetByIdAsync(productId);
             if (product != null && product.StockQuantity < dto.Quantity)
                 throw new InvalidOperationException($"Not enough stock. Available: {product.StockQuantity}");

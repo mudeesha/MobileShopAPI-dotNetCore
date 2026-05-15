@@ -7,8 +7,6 @@ namespace MobileShopAPI.Models
     {
         public int ProductImageId { get; set; }
         public int AttributeValueId { get; set; }
-
-        // Navigation
         public ProductImage? ProductImage { get; set; }
         public AttributeValue? AttributeValue { get; set; }
     }

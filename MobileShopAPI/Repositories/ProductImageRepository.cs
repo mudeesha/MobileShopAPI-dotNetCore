@@ -20,8 +20,7 @@ namespace MobileShopAPI.Repositories
                 .Include(pi => pi.ProductImageAssignments)
                 .FirstOrDefaultAsync(pi => pi.Id == id);
         }
-
-        // ✅ Updated: Add pagination parameters
+        
         public async Task<List<ProductImage>> GetAllAsync(int pageNumber = 1, int pageSize = 20)
         {
             return await _context.ProductImages
@@ -30,16 +29,14 @@ namespace MobileShopAPI.Repositories
                 .Take(pageSize)
                 .ToListAsync();
         }
-
-        // ✅ Added: Parameterless GetAllAsync method from interface
+        
         public async Task<List<ProductImage>> GetAllAsync()
         {
             return await _context.ProductImages
                 .Include(pi => pi.ProductImageAssignments)
                 .ToListAsync();
         }
-
-        // ✅ Added: Get total count for pagination
+        
         public async Task<int> GetTotalCountAsync()
         {
             return await _context.ProductImages.CountAsync();

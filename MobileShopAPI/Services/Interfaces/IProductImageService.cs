@@ -8,7 +8,7 @@ namespace MobileShopAPI.Services.Interfaces
         Task<ProductImageDto?> GetImageByIdAsync(int id);
         Task<int> GetTotalImageCountAsync();
         Task<ProductImageDto> CreateImageAsync(ProductImageCreateDto dto);
-        Task<bool> UpdateImageAsync(int id, ProductImageUpdateDto dto); // ✅ ADD THIS
+        Task<bool> UpdateImageAsync(int id, ProductImageUpdateDto dto);
         Task<bool> AssignImageToProductAsync(ImageAssignmentDto dto);
         Task<bool> RemoveImageFromProductAsync(int productId, int productImageId);
         Task<List<ProductImageDto>> GetImagesByProductAsync(int productId);
